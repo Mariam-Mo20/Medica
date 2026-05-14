@@ -122,8 +122,11 @@ export function AppointmentsPage() {
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  const todayStr = new Date().toISOString().slice(0, 10);
-  const totalBooked = appointments.filter((a) => a.scheduled_at?.startsWith(todayStr)).length;
+  const now = new Date();
+  const todayBooked = appointments.filter((a) => {
+    const d = new Date(a.scheduled_at);
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+  }).length;
   const completedCount = appointments.filter((a) => a.status === "completed").length;
 
   const handleStatusChange = async (aptId: number, newStatus: string) => {
@@ -220,7 +223,7 @@ export function AppointmentsPage() {
               </div>
             </div>
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Booked Today</p>
-            <p className="text-2xl font-bold text-foreground mt-1">{totalBooked}</p>
+            <p className="text-2xl font-bold text-foreground mt-1">{todayBooked}</p>
           </CardContent>
         </Card>
 
@@ -278,11 +281,19 @@ export function AppointmentsPage() {
               <option value="">All Statuses</option>
               {statusOptions
                 .filter((o) => o.value)
-                .map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
+                .map((o) => {
+                  const colorMap: Record<string, string> = {
+                    scheduled: "#f59e0b",
+                    checked_in: "#3b82f6",
+                    in_progress: "#8b5cf6",
+                    completed: "#10b981",
+                  };
+                  return (
+                    <option key={o.value} value={o.value} style={{ color: colorMap[o.value] || "#6b7280", fontWeight: 600 }}>
+                      {o.label}
+                    </option>
+                  );
+                })}
             </select>
           </div>
           <div className="flex items-center gap-3">
@@ -364,16 +375,24 @@ export function AppointmentsPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-center">
-                        <select
-                          value={apt.status}
-                          onChange={(e) => handleStatusChange(apt.id, e.target.value)}
-                          className={`px-2.5 py-0.5 rounded-full text-xs font-semibold cursor-pointer border-0 focus:outline-none focus:ring-2 focus:ring-primary/20 ${statusStyles[apt.status] || "bg-gray-100 text-gray-500"}`}
-                        >
-                          {Object.entries(statusLabels).map(([val, label]) => (
-                            <option key={val} value={val}>
-                              {label}
-                            </option>
-                          ))}
+                          <select
+                            value={apt.status}
+                            onChange={(e) => handleStatusChange(apt.id, e.target.value)}
+                            className={`px-2.5 py-0.5 rounded-full text-xs font-semibold cursor-pointer border-0 focus:outline-none focus:ring-2 focus:ring-primary/20 ${statusStyles[apt.status] || "bg-gray-100 text-gray-500"}`}
+                          >
+                            {Object.entries(statusLabels).map(([val, label]) => {
+                              const colorMap: Record<string, string> = {
+                                scheduled: "#f59e0b",
+                                checked_in: "#3b82f6",
+                                in_progress: "#8b5cf6",
+                                completed: "#10b981",
+                              };
+                              return (
+                                <option key={val} value={val} style={{ color: colorMap[val] || "#6b7280", fontWeight: 600 }}>
+                                  {label}
+                                </option>
+                              );
+                            })}
                         </select>
                       </td>
                       <td className="px-6 py-4 text-right">

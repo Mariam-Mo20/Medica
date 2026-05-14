@@ -9,10 +9,8 @@ import { StatsSkeleton } from "@/components/ui/skeleton";
 import {
   Users,
   Calendar,
-  TrendingUp,
   Plus,
   MoreVertical,
-  Download,
   Activity,
   CalendarCheck,
 } from "lucide-react";
@@ -90,9 +88,6 @@ export function DashboardPage() {
     ? Math.round((stats.completed_appointments / stats.today_appointments) * 100)
     : 0;
 
-  const upcomingVisits =
-    stats.today_appointments - stats.completed_appointments - stats.cancelled_appointments;
-
   return (
     <div className="space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -113,10 +108,6 @@ export function DashboardPage() {
               <div className="p-2.5 bg-primary-container text-primary rounded-lg">
                 <Calendar className="h-5 w-5" />
               </div>
-              <span className="flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full text-xs font-medium">
-                <TrendingUp className="h-3.5 w-3.5" />
-                +{stats.new_patients_today} today
-              </span>
             </div>
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Patients</p>
             <p className="text-2xl font-bold text-foreground mt-1">{stats.total_patients}</p>
@@ -129,7 +120,7 @@ export function DashboardPage() {
               <div className="p-2.5 bg-primary-container text-primary rounded-lg">
                 <CalendarCheck className="h-5 w-5" />
               </div>
-              <span className="text-xs font-medium text-muted-foreground">{completionRate}% Done</span>
+              <span className="text-xs font-medium text-muted-foreground">{stats.completed_appointments} completed</span>
             </div>
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Today's Appointments</p>
             <p className="text-2xl font-bold text-foreground mt-1">
@@ -157,9 +148,9 @@ export function DashboardPage() {
                 View List
               </button>
             </div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Active Doctors</p>
-            <p className="text-2xl font-bold text-foreground mt-1">{stats.active_doctors}</p>
-            <p className="text-xs text-muted-foreground mt-1">Pending visits: {Math.max(0, upcomingVisits)}</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Completed Visits</p>
+            <p className="text-2xl font-bold text-foreground mt-1">{stats.completed_appointments}</p>
+
           </CardContent>
         </Card>
       </div>
@@ -173,10 +164,7 @@ export function DashboardPage() {
                   <h3 className="text-base font-semibold text-foreground">Clinical Analytics</h3>
                   <p className="text-sm text-muted-foreground">Appointment distribution by status</p>
                 </div>
-                <Button variant="outline" size="sm" className="gap-2 text-muted-foreground rounded-lg border-border">
-                  <Download className="h-4 w-4" />
-                  Export
-                </Button>
+                <div />
               </div>
               {chartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={280}>

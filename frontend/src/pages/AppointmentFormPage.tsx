@@ -91,10 +91,21 @@ export function AppointmentFormPage() {
         if (!newPatient.first_name || !newPatient.last_name) {
           throw new Error("Patient first and last name are required");
         }
-        const patientPayload = {
-          ...newPatient,
-          date_of_birth: parseDateToISO(newPatient.date_of_birth) || newPatient.date_of_birth,
+        if (!newPatient.date_of_birth) {
+          throw new Error("Patient date of birth is required");
+        }
+        const dob = parseDateToISO(newPatient.date_of_birth);
+        if (!dob) {
+          throw new Error("Invalid date of birth format. Use dd/mm/yyyy");
+        }
+        const patientPayload: Record<string, unknown> = {
+          first_name: newPatient.first_name,
+          last_name: newPatient.last_name,
+          date_of_birth: dob,
         };
+        if (newPatient.gender) patientPayload.gender = newPatient.gender;
+        if (newPatient.phone) patientPayload.phone = newPatient.phone;
+        if (newPatient.email) patientPayload.email = newPatient.email;
         const created = await api.post<Patient>("/patients/", patientPayload);
         patientId = created.id;
       } else {

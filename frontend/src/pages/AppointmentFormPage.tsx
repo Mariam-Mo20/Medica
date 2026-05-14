@@ -9,7 +9,7 @@ import { Select } from "@/components/ui/select";
 import { DateInput } from "@/components/ui/date-input";
 import { parseDateToISO } from "@/lib/date";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, Save, Search, UserPlus, ArrowLeft } from "lucide-react";
+import { AlertCircle, Save, Search, UserPlus, ArrowLeft, Loader2 } from "lucide-react";
 
 const genderOptions = [
   { value: "male", label: "Male" },
@@ -64,9 +64,7 @@ export function AppointmentFormPage() {
         setPatientSearch("");
         setPatients([]);
       })
-      .catch(() => {
-        /* ignore invalid patientId */
-      });
+      .catch(() => {});
   }, [searchParams]);
 
   const handlePatientSearch = async (q: string) => {
@@ -90,27 +88,38 @@ export function AppointmentFormPage() {
       if (selectedPatient) {
         patientId = selectedPatient.id;
       } else if (showNewPatient) {
-        const patientPayload = { ...newPatient, date_of_birth: parseDateToISO(newPatient.date_of_birth) || newPatient.date_of_birth };
+        if (!newPatient.first_name || !newPatient.last_name) {
+          throw new Error("Patient first and last name are required");
+        }
+        const patientPayload = {
+          ...newPatient,
+          date_of_birth: parseDateToISO(newPatient.date_of_birth) || newPatient.date_of_birth,
+        };
         const created = await api.post<Patient>("/patients/", patientPayload);
         patientId = created.id;
       } else {
         throw new Error("Please select a patient or register a new one");
       }
 
+      if (!form.scheduled_at) throw new Error("Date is required");
       const isoDate = parseDateToISO(form.scheduled_at);
       if (!isoDate) throw new Error("Invalid date format. Use dd/mm/yyyy");
 
-      const scheduledAt = new Date(`${isoDate}T${form.scheduled_time}`);
+      const scheduledAt = new Date(`${isoDate}T${form.scheduled_time || "09:00"}`);
+      if (isNaN(scheduledAt.getTime())) throw new Error("Invalid date or time");
+
       const payload: Record<string, unknown> = {
         patient_id: patientId,
         scheduled_at: scheduledAt.toISOString(),
-        duration_minutes: parseInt(form.duration_minutes),
-        reason: form.reason || null,
+        duration_minutes: parseInt(form.duration_minutes) || 30,
       };
+      if (form.reason) payload.reason = form.reason;
+
       await api.post<Appointment>("/appointments/", payload);
       navigate("/appointments");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to schedule appointment");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to schedule appointment";
+      setError(msg);
     } finally {
       setSaving(false);
     }
@@ -130,7 +139,7 @@ export function AppointmentFormPage() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="flex items-start gap-2 p-3 text-sm bg-red-50 text-red-600 rounded-md border border-red-200">
+              <div className="flex items-start gap-2 p-3 text-sm bg-red-50 text-destructive rounded-md border border-red-200">
                 <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
                 <span>{error}</span>
               </div>
@@ -241,22 +250,24 @@ export function AppointmentFormPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="reason">Reason for Visit *</Label>
+              <Label htmlFor="reason">Reason for Visit</Label>
               <Select
                 id="reason"
                 options={reasonOptions}
-                placeholder="Select"
+                placeholder="Select (optional)"
                 value={form.reason}
                 onChange={(e) => setForm({ ...form, reason: e.target.value })}
-                required
               />
             </div>
 
             <div className="flex justify-end gap-3 pt-4">
               <Button variant="outline" type="button" onClick={() => navigate("/appointments")}>Cancel</Button>
               <Button type="submit" disabled={saving}>
-                <Save className="h-4 w-4 mr-2" />
-                {saving ? "Scheduling..." : "Schedule Appointment"}
+                {saving ? (
+                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Scheduling...</>
+                ) : (
+                  <><Save className="h-4 w-4 mr-2" /> Schedule Appointment</>
+                )}
               </Button>
             </div>
           </form>

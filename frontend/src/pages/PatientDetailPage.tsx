@@ -129,9 +129,9 @@ export function PatientDetailPage() {
 
       <div className="relative rounded-2xl overflow-hidden border border-border shadow-sm bg-white">
         <div className="px-8 pb-8 relative flex flex-col md:flex-row items-end gap-6 pt-8">
-          <div className="w-28 h-28 rounded-2xl bg-white p-1 shadow-md">
-            <div className="w-full h-full bg-primary-container rounded-xl flex items-center justify-center border-2 border-white">
-              <span className="text-3xl font-bold text-primary">
+          <div className="w-32 h-32 rounded-3xl bg-white p-1 shadow-md">
+            <div className="w-full h-full bg-primary-container rounded-2xl flex items-center justify-center border-2 border-white">
+              <span className="text-4xl font-bold text-primary">
                 {(patient.first_name?.[0] || "")}{(patient.last_name?.[0] || "")}
               </span>
             </div>
@@ -168,41 +168,41 @@ export function PatientDetailPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
-        <Card className="border-border shadow-sm rounded-xl">
+        <Card className="border-border/70 shadow-sm rounded-2xl bg-white/70">
           <CardContent className="p-5">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Last Visit</p>
             <div className="flex items-center justify-between">
               <span className="text-base font-semibold text-foreground">
                 {lastRecord?.created_at ? new Date(lastRecord.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
               </span>
-              <Calendar className="h-5 w-5 text-muted-foreground/40" />
+              <Calendar className="h-5 w-5 text-muted-foreground/30" />
             </div>
           </CardContent>
         </Card>
-        <Card className="border-border shadow-sm rounded-xl">
+        <Card className="border-border/70 shadow-sm rounded-2xl bg-white/70">
           <CardContent className="p-5">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Last Diagnosis</p>
             <div className="flex items-center justify-between">
               <span className="text-base font-semibold text-foreground">{lastRecord?.diagnosis || "—"}</span>
-              <FileText className="h-5 w-5 text-muted-foreground/40" />
+              <FileText className="h-5 w-5 text-muted-foreground/30" />
             </div>
           </CardContent>
         </Card>
-        <Card className="border-border shadow-sm rounded-xl">
+        <Card className="border-border/70 shadow-sm rounded-2xl bg-white/70">
           <CardContent className="p-5">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Age</p>
             <div className="flex items-center justify-between">
               <span className="text-base font-semibold text-foreground">{age ?? "—"} Years</span>
-              <Cake className="h-5 w-5 text-muted-foreground/40" />
+              <Cake className="h-5 w-5 text-muted-foreground/30" />
             </div>
           </CardContent>
         </Card>
-        <Card className="border-border shadow-sm rounded-xl">
+        <Card className="border-border/70 shadow-sm rounded-2xl bg-white/70">
           <CardContent className="p-5">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Phone</p>
             <div className="flex items-center justify-between">
               <span className="text-base font-semibold text-foreground">{patient.phone || "—"}</span>
-              <Phone className="h-5 w-5 text-muted-foreground/40" />
+              <Phone className="h-5 w-5 text-muted-foreground/30" />
             </div>
           </CardContent>
         </Card>

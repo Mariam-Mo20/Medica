@@ -138,7 +138,7 @@ export function PatientsPage() {
             <thead>
               <tr className="border-b border-border/50">
                 <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Patient Name</th>
-                <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Action</th>
+                <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/30">
@@ -187,18 +187,19 @@ export function PatientsPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          {patient.phone && (
-                            <a
-                              href={`tel:${patient.phone}`}
-                              className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
-                              title={`Call ${patient.phone}`}
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <Phone className="h-4 w-4" />
-                            </a>
-                          )}
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
+                            title={patient.phone ? `Call ${patient.phone}` : "No phone number"}
+                            disabled={!patient.phone}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (patient.phone) window.location.href = `tel:${patient.phone}`;
+                            }}
+                          >
+                            <Phone className="h-4 w-4" />
+                          </button>
                           <button
                             className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
                             title="View patient"

@@ -74,6 +74,12 @@ function formatDate(dateStr: string) {
   };
 }
 
+function isToday(dateStr: string) {
+  const d = new Date(dateStr);
+  const now = new Date();
+  return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+}
+
 export function AppointmentsPage() {
   const navigate = useNavigate();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -84,6 +90,7 @@ export function AppointmentsPage() {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [shareSuccess, setShareSuccess] = useState("");
   const [shareError, setShareError] = useState("");
+  const [showTodayOnly, setShowTodayOnly] = useState(true);
 
   useEffect(() => {
     if (shareSuccess || shareError) {
@@ -110,27 +117,28 @@ export function AppointmentsPage() {
   }, [statusFilter]);
 
   const filtered = useMemo(
-    () =>
-      searchQuery
-        ? appointments.filter((a) =>
-            (a.patient_name || "").toLowerCase().includes(searchQuery.toLowerCase()),
-          )
-        : appointments,
-    [appointments, searchQuery],
+    () => {
+      let list = appointments;
+      if (searchQuery) {
+        list = list.filter((a) =>
+          (a.patient_name || "").toLowerCase().includes(searchQuery.toLowerCase()),
+        );
+      }
+      if (showTodayOnly) {
+        list = list.filter((a) => isToday(a.scheduled_at));
+      }
+      return list;
+    },
+    [appointments, searchQuery, showTodayOnly],
   );
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  const now = new Date();
-  const todayBooked = appointments.filter((a) => {
-    const d = new Date(a.scheduled_at);
-    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
-  }).length;
+  const todayBooked = appointments.filter((a) => isToday(a.scheduled_at)).length;
   const completedCount = appointments.filter((a) => {
     if (a.status !== "completed") return false;
-    const d = new Date(a.scheduled_at);
-    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+    return isToday(a.scheduled_at);
   }).length;
 
   const handleStatusChange = async (aptId: number, newStatus: string) => {
@@ -260,6 +268,20 @@ export function AppointmentsPage() {
               />
             </div>
             <div className="h-5 w-px bg-border" />
+            <div className="flex bg-gray-100 rounded-lg p-0.5">
+              <button
+                onClick={() => { setShowTodayOnly(true); setPage(1); }}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${showTodayOnly ? "bg-white text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                Today
+              </button>
+              <button
+                onClick={() => { setShowTodayOnly(false); setPage(1); }}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${!showTodayOnly ? "bg-white text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                All
+              </button>
+            </div>
             <div className="flex gap-2">
               {activeFilters.map((f) => (
                 <span
@@ -376,12 +398,7 @@ export function AppointmentsPage() {
                         <div>
                           <p className="text-sm font-medium text-foreground">{time}</p>
                           <p className="text-xs text-muted-foreground">
-                            {(() => {
-                              const d = new Date(apt.scheduled_at);
-                              return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate()
-                                ? "Today"
-                                : date;
-                            })()}
+                            {isToday(apt.scheduled_at) ? "Today" : date}
                           </p>
                         </div>
                       </td>

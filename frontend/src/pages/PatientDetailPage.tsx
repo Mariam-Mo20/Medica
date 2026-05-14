@@ -12,9 +12,6 @@ import { ArrowLeft, Calendar, Phone, FileText, Pill, Save, Plus, Trash2, Stethos
 interface PrescriptionForm {
   medication_name: string;
   dosage: string;
-  frequency: string;
-  duration: string;
-  instructions: string;
 }
 
 export function PatientDetailPage() {
@@ -54,7 +51,7 @@ export function PatientDetailPage() {
   }, [records]);
 
   const addRx = () =>
-    setRxForms([...rxForms, { medication_name: "", dosage: "", frequency: "", duration: "", instructions: "" }]);
+    setRxForms([...rxForms, { medication_name: "", dosage: "" }]);
   const removeRx = (idx: number) => setRxForms(rxForms.filter((_, i) => i !== idx));
   const updateRx = (idx: number, field: keyof PrescriptionForm, value: string) => {
     const u = [...rxForms];
@@ -74,7 +71,9 @@ export function PatientDetailPage() {
         visit_notes: visitNotes,
       });
       if (rxForms.length > 0) {
-        await api.post<Prescription[]>(`/prescriptions/medical-record/${rec.id}`, rxForms);
+        await api.post<Prescription[]>(`/prescriptions/medical-record/${rec.id}`,
+          rxForms.map((rx) => ({ ...rx, frequency: rx.dosage ? "As directed" : "As needed" }))
+        );
       }
       setDiagnosis("");
       setSymptoms("");
@@ -308,14 +307,14 @@ export function PatientDetailPage() {
                   </div>
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <Label className="text-xs font-medium">Prescriptions</Label>
+                      <Label className="text-xs font-medium">Medication</Label>
                       <Button type="button" variant="outline" size="sm" onClick={addRx} className="h-7 text-xs rounded-lg border-border">
                         <Plus className="h-3 w-3 mr-1" />
                         Add Medication
                       </Button>
                     </div>
                     {rxForms.length === 0 && (
-                      <p className="text-xs text-muted-foreground text-center py-3 bg-muted/30 rounded-lg">No prescriptions added</p>
+                      <p className="text-xs text-muted-foreground text-center py-3 bg-muted/30 rounded-lg">No medication added</p>
                     )}
                     {rxForms.map((pf, idx) => (
                       <div key={idx} className="border border-border rounded-lg p-3 space-y-2 mb-2">
@@ -326,12 +325,9 @@ export function PatientDetailPage() {
                           </button>
                         </div>
                         <div className="grid gap-2 md:grid-cols-2">
-                          <Input value={pf.medication_name} onChange={(e) => updateRx(idx, "medication_name", e.target.value)} placeholder="Medication name" className="h-8 text-sm border-border rounded-lg" />
-                          <Input value={pf.dosage} onChange={(e) => updateRx(idx, "dosage", e.target.value)} placeholder="Dosage" className="h-8 text-sm border-border rounded-lg" />
-                          <Input value={pf.frequency} onChange={(e) => updateRx(idx, "frequency", e.target.value)} placeholder="Frequency" className="h-8 text-sm border-border rounded-lg" />
-                          <Input value={pf.duration} onChange={(e) => updateRx(idx, "duration", e.target.value)} placeholder="Duration" className="h-8 text-sm border-border rounded-lg" />
+                          <Input value={pf.medication_name} onChange={(e) => updateRx(idx, "medication_name", e.target.value)} placeholder="Medication name *" className="h-9 text-sm border-border rounded-lg" required />
+                          <Input value={pf.dosage} onChange={(e) => updateRx(idx, "dosage", e.target.value)} placeholder="Dosage (optional)" className="h-9 text-sm border-border rounded-lg" />
                         </div>
-                        <Input value={pf.instructions} onChange={(e) => updateRx(idx, "instructions", e.target.value)} placeholder="Instructions (optional)" className="h-8 text-sm border-border rounded-lg" />
                       </div>
                     ))}
                   </div>

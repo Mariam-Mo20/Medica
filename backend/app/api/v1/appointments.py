@@ -46,6 +46,7 @@ async def create_appointment(
             db.add(inst)
 
     await db.flush()
+    await db.refresh(appointment)
     return await appointment_to_response(appointment, db)
 
 
@@ -124,7 +125,9 @@ async def update_appointment(
         setattr(appointment, field, value)
 
     await db.flush()
+    await db.refresh(appointment)
     return await appointment_to_response(appointment, db)
+
 
 
 @router.patch("/{appointment_id}/status", response_model=AppointmentResponse)
@@ -148,6 +151,7 @@ async def update_appointment_status(
 
     appointment.status = data.status
     await db.flush()
+    await db.refresh(appointment)
     return await appointment_to_response(appointment, db)
 
 

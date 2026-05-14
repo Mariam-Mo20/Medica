@@ -12,7 +12,6 @@ import {
   CalendarCheck,
   ChevronLeft,
   ChevronRight,
-  X,
   Phone,
 } from "lucide-react";
 
@@ -267,7 +266,8 @@ export function AppointmentsPage() {
                 className="pl-10 h-10 bg-surface border-border rounded-lg"
               />
             </div>
-            <div className="h-5 w-px bg-border" />
+          </div>
+          <div className="flex items-center gap-3">
             <div className="flex bg-gray-100 rounded-lg p-0.5">
               <button
                 onClick={() => { setShowTodayOnly(true); setPage(1); }}
@@ -281,20 +281,6 @@ export function AppointmentsPage() {
               >
                 All
               </button>
-            </div>
-            <div className="flex gap-2">
-              {activeFilters.map((f) => (
-                <span
-                  key={f.key}
-                  className="px-2.5 py-1 bg-primary-container text-primary text-xs font-medium rounded-full flex items-center gap-1"
-                >
-                  {f.label}
-                  <X
-                    className="h-3 w-3 cursor-pointer"
-                    onClick={() => handleRemoveFilter(f.key)}
-                  />
-                </span>
-              ))}
             </div>
             <select
               value={statusFilter}
@@ -321,25 +307,6 @@ export function AppointmentsPage() {
                   );
                 })}
             </select>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-muted-foreground">Batch Actions:</span>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={selectedIds.size === 0}
-              className="rounded-lg border-border"
-            >
-              Reschedule
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={selectedIds.size === 0}
-              className="rounded-lg border-border"
-            >
-              Message
-            </Button>
           </div>
         </div>
 

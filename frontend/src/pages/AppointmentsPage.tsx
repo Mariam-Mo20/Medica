@@ -26,31 +26,25 @@ const AVATAR_COLORS = [
 ];
 
 const statusStyles: Record<string, string> = {
-  completed: "bg-emerald-50 text-emerald-700",
   scheduled: "bg-amber-50 text-amber-700",
   checked_in: "bg-blue-50 text-blue-700",
   in_progress: "bg-purple-50 text-purple-700",
-  cancelled: "bg-gray-100 text-gray-500",
-  no_show: "bg-red-50 text-red-700",
+  completed: "bg-emerald-50 text-emerald-700",
 };
 
 const statusLabels: Record<string, string> = {
-  scheduled: "Pending",
+  scheduled: "Scheduled",
   checked_in: "Checked In",
   in_progress: "In Progress",
-  completed: "Confirmed",
-  cancelled: "Cancelled",
-  no_show: "No Show",
+  completed: "Completed",
 };
 
 const statusOptions = [
   { value: "", label: "All Statuses" },
-  { value: "scheduled", label: "Pending" },
+  { value: "scheduled", label: "Scheduled" },
   { value: "checked_in", label: "Checked In" },
   { value: "in_progress", label: "In Progress" },
-  { value: "completed", label: "Confirmed" },
-  { value: "cancelled", label: "Cancelled" },
-  { value: "no_show", label: "No Show" },
+  { value: "completed", label: "Completed" },
 ];
 
 const PAGE_SIZE = 10;
@@ -331,7 +325,7 @@ export function AppointmentsPage() {
                   <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider w-10">#</th>
                   <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Patient Name</th>
                   <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Last Visit</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-center">Status</th>
                   <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-right">Actions</th>
                 </tr>
               </thead>
@@ -369,7 +363,7 @@ export function AppointmentsPage() {
                           <p className="text-xs text-muted-foreground">{time}</p>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 text-center">
                         <select
                           value={apt.status}
                           onChange={(e) => handleStatusChange(apt.id, e.target.value)}

@@ -316,6 +316,10 @@ export function AppointmentsPage() {
                   );
                 })}
             </select>
+            <div className="h-5 w-px bg-border" />
+            <span className="text-xs text-muted-foreground">Batch Actions:</span>
+            <Button variant="outline" size="sm" disabled className="rounded-lg border-border">Reschedule</Button>
+            <Button variant="outline" size="sm" disabled className="rounded-lg border-border">Message</Button>
           </div>
         </div>
 

@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Phone,
+  Share2,
 } from "lucide-react";
 
 const AVATAR_COLORS = [
@@ -150,6 +151,16 @@ export function AppointmentsPage() {
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to update status";
       setShareError(msg);
+    }
+  };
+
+  const handleShare = async (aptId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      const res = await api.post<{ id: number }>(`/notifications/share-appointment/${aptId}`);
+      setShareSuccess(`Patient shared with doctor successfully`);
+    } catch (err) {
+      setShareError(err instanceof Error ? err.message : "Failed to share patient");
     }
   };
 
@@ -405,6 +416,13 @@ export function AppointmentsPage() {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-1">
+                          <button
+                            className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
+                            title="Share patient with doctor"
+                            onClick={(e) => handleShare(apt.id, e)}
+                          >
+                            <Share2 className="h-4 w-4" />
+                          </button>
                           <button
                             className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
                             title="Call patient"

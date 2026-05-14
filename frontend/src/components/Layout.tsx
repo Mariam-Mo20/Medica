@@ -1,5 +1,8 @@
+import { useEffect, useState, useRef } from "react";
 import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
+import { api } from "@/lib/api";
+import { Notification, NotificationList } from "@/types";
 import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard,
@@ -11,8 +14,9 @@ import {
   Settings,
   ClipboardList,
   Search,
+  Bell,
+  ExternalLink,
 } from "lucide-react";
-import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -27,6 +31,48 @@ export function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const notifRef = useRef<HTMLDivElement>(null);
+
+  const fetchNotifications = () => {
+    api.get<NotificationList>("/notifications/").then((data) => {
+      setNotifications(data.notifications);
+      setUnreadCount(data.unread_count);
+    }).catch(() => {});
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (!showNotifications) return;
+    const handleClick = (e: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setShowNotifications(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [showNotifications]);
+
+  const handleMarkRead = async (notification: Notification) => {
+    try {
+      await api.patch(`/notifications/${notification.id}/read`);
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === notification.id ? { ...n, is_read: true } : n)),
+      );
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+    } catch {}
+    if (notification.resource_type === "patient" && notification.resource_id) {
+      navigate(`/patients/${notification.resource_id}`);
+      setShowNotifications(false);
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -127,13 +173,62 @@ export function Layout() {
               />
             </div>
           </div>
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="text-right hidden sm:block">
-              <p className="text-sm font-semibold text-foreground leading-none">{user?.full_name}</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5 capitalize">{user?.role}</p>
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="relative" ref={notifRef}>
+              <button
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="relative p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
+              >
+                <Bell className="h-5 w-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
+              </button>
+              {showNotifications && (
+                <div className="absolute right-0 mt-2 w-80 bg-white border border-border rounded-xl shadow-lg z-50 max-h-96 overflow-y-auto">
+                  <div className="p-3 border-b border-border">
+                    <p className="text-sm font-semibold text-foreground">Notifications</p>
+                  </div>
+                  {notifications.length === 0 ? (
+                    <div className="p-6 text-center text-sm text-muted-foreground">
+                      No notifications
+                    </div>
+                  ) : (
+                    notifications.slice(0, 10).map((n) => (
+                      <button
+                        key={n.id}
+                        onClick={() => handleMarkRead(n)}
+                        className={`w-full text-left px-4 py-3 hover:bg-accent/50 transition-colors border-b border-border last:border-0 ${!n.is_read ? "bg-primary/5" : ""}`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className={`w-2 h-2 rounded-full shrink-0 mt-1.5 ${n.is_read ? "bg-transparent" : "bg-primary"}`} />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium text-foreground truncate">{n.title}</p>
+                            <p className="text-xs text-muted-foreground truncate">{n.message}</p>
+                            <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+                              {new Date(n.created_at).toLocaleDateString()} {new Date(n.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                            </p>
+                          </div>
+                          {n.resource_type && (
+                            <ExternalLink className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-1" />
+                          )}
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
-            <div className="w-9 h-9 rounded-full bg-primary-container flex items-center justify-center text-primary font-bold text-sm">
-              {user?.full_name?.charAt(0)?.toUpperCase() || "U"}
+            <div className="flex items-center gap-3">
+              <div className="text-right hidden sm:block">
+                <p className="text-sm font-semibold text-foreground leading-none">{user?.full_name}</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5 capitalize">{user?.role}</p>
+              </div>
+              <div className="w-9 h-9 rounded-full bg-primary-container flex items-center justify-center text-primary font-bold text-sm">
+                {user?.full_name?.charAt(0)?.toUpperCase() || "U"}
+              </div>
             </div>
           </div>
         </header>

@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1 import auth, tenants, users, patients, doctors, appointments, medical_records, prescriptions, dashboard, invitations
+from app.api.v1 import auth, tenants, users, patients, doctors, appointments, medical_records, prescriptions, dashboard, invitations, notifications
 
 router = APIRouter(prefix="/api/v1")
 
@@ -14,4 +14,5 @@ router.include_router(medical_records.router, prefix="/medical-records", tags=["
 router.include_router(prescriptions.router, prefix="/prescriptions", tags=["Prescriptions"])
 router.include_router(invitations.router, prefix="/invitations", tags=["Invitations"])
 router.include_router(dashboard.router, prefix="/dashboard", tags=["Dashboard"])
+router.include_router(notifications.router, prefix="/notifications", tags=["Notifications"])
 

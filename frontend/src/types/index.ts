@@ -125,4 +125,24 @@ export interface Invitation {
   doctor_name?: string;
 }
 
+export interface Notification {
+  id: number;
+  tenant_id: number;
+  recipient_id: number;
+  sender_id: number | null;
+  notification_type: string;
+  title: string;
+  message: string | null;
+  resource_type: string | null;
+  resource_id: number | null;
+  is_read: boolean;
+  created_at: string;
+  sender_name: string | null;
+}
+
+export interface NotificationList {
+  notifications: Notification[];
+  unread_count: number;
+}
+
 

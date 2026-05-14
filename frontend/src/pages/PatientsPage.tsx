@@ -12,10 +12,8 @@ import {
   ChevronRight,
   Users,
   Activity,
-  AlertTriangle,
   Filter,
   ArrowUpDown,
-  MoreVertical,
   Phone,
 } from "lucide-react";
 
@@ -61,8 +59,9 @@ export function PatientsPage() {
   const todayStr = new Date().toISOString().slice(0, 10);
   const newToday = patients.filter((p) => p.created_at?.startsWith(todayStr)).length;
 
-  const totalPages = Math.ceil(patients.length / PAGE_SIZE);
-  const paginated = patients.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const displayed = patients;
+  const totalPages = Math.ceil(displayed.length / PAGE_SIZE);
+  const paginated = displayed.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
     <div className="space-y-8">
@@ -77,7 +76,7 @@ export function PatientsPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <Card className="border-border/70 shadow-sm rounded-2xl relative overflow-hidden group">
           <CardContent className="p-6">
             <div className="flex justify-between items-start mb-4">
@@ -108,20 +107,7 @@ export function PatientsPage() {
           </div>
         </Card>
 
-        <Card className="border-border/70 shadow-sm rounded-2xl relative overflow-hidden group">
-          <CardContent className="p-6">
-            <div className="flex justify-between items-start mb-4">
-              <div className="p-3 bg-primary/10 rounded-xl text-primary group-hover:scale-110 transition-transform">
-                <AlertTriangle className="h-5 w-5" />
-              </div>
-            </div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Critical Monitoring</p>
-            <p className="text-2xl font-bold text-foreground mt-1">—</p>
-          </CardContent>
-          <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
-            <AlertTriangle className="h-28 w-28" />
-          </div>
-        </Card>
+
       </div>
 
       <div className="bg-white/70 backdrop-blur-xl border border-border/50 rounded-2xl p-4 flex flex-wrap gap-4 items-center justify-between shadow-sm">
@@ -143,9 +129,6 @@ export function PatientsPage() {
             <ArrowUpDown className="h-4 w-4" />
             Sort by: Recent
           </Button>
-          <Button variant="outline" className="rounded-xl border-border/60 h-12 w-12 p-0 bg-white">
-            <MoreVertical className="h-4 w-4" />
-          </Button>
         </div>
       </div>
 
@@ -155,16 +138,13 @@ export function PatientsPage() {
             <thead>
               <tr className="border-b border-border/50">
                 <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Patient Name</th>
-                <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Patient ID</th>
-                <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Last Visit</th>
-                <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
                 <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/30">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-16 text-center text-sm text-muted-foreground">
+                  <td colSpan={2} className="px-6 py-16 text-center text-sm text-muted-foreground">
                     <div className="animate-pulse space-y-3 max-w-md mx-auto">
                       {[...Array(4)].map((_, i) => (
                         <div key={i} className="h-12 bg-gray-100 rounded-lg" />
@@ -174,7 +154,7 @@ export function PatientsPage() {
                 </tr>
               ) : paginated.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-16 text-center">
+                  <td colSpan={2} className="px-6 py-16 text-center">
                     <Users className="h-10 w-10 mx-auto mb-3 text-muted-foreground/40" />
                     <p className="text-sm text-muted-foreground">No patients found</p>
                   </td>
@@ -207,19 +187,11 @@ export function PatientsPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-muted-foreground font-mono">#{patient.medical_record_number}</td>
-                      <td className="px-6 py-4 text-sm text-muted-foreground">—</td>
-                      <td className="px-6 py-4">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                          Active
-                        </span>
-                      </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-1">
                           <button
                             className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
-                            title={patient.phone ? `Call ${patient.phone}` : "No phone"}
+                            title={patient.phone ? `Call ${patient.phone}` : "No phone number"}
                             disabled={!patient.phone}
                             onClick={(e) => {
                               e.stopPropagation();
@@ -243,11 +215,11 @@ export function PatientsPage() {
             </tbody>
           </table>
         </div>
-        {!loading && patients.length > 0 && (
+        {!loading && displayed.length > 0 && (
           <div className="px-6 py-4 border-t border-border/50 flex items-center justify-between bg-surface/50">
             <p className="text-sm text-muted-foreground">
               Showing <span className="font-medium text-foreground">1-{paginated.length}</span> of{" "}
-              <span className="font-medium text-foreground">{patients.length}</span> patients
+              <span className="font-medium text-foreground">{displayed.length}</span> patients
             </p>
             <div className="flex items-center gap-1">
               <button

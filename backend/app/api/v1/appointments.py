@@ -74,7 +74,7 @@ async def list_appointments(
         from datetime import datetime
         query = query.where(Appointment.scheduled_at <= datetime.fromisoformat(date_to))
 
-    query = query.order_by(Appointment.scheduled_at).offset(skip).limit(limit)
+    query = query.order_by(Appointment.scheduled_at.desc()).offset(skip).limit(limit)
     result = await db.execute(query)
     appointments = result.scalars().all()
 

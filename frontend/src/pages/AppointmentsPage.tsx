@@ -108,6 +108,7 @@ export function AppointmentsPage() {
   const fetchAppointments = () => {
     const params = new URLSearchParams();
     if (statusFilter) params.set("status", statusFilter);
+    params.set("limit", "100");
     api
       .get<Appointment[]>(`/appointments/?${params.toString()}`)
       .then(setAppointments)

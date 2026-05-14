@@ -12,7 +12,6 @@ import {
   ChevronRight,
   Users,
   Activity,
-  AlertTriangle,
   Filter,
   ArrowUpDown,
 } from "lucide-react";
@@ -47,25 +46,19 @@ export function PatientsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const [showInactive, setShowInactive] = useState(false);
 
   useEffect(() => {
     if (searchTerm.length >= 2) {
       api.get<Patient[]>(`/patients/search?q=${encodeURIComponent(searchTerm)}`).then(setPatients);
     } else {
-      api.get<Patient[]>("/patients/").then(setPatients).finally(() => setLoading(false));
+      api.get<Patient[]>("/patients/?limit=100").then(setPatients).finally(() => setLoading(false));
     }
   }, [searchTerm]);
 
-  useEffect(() => {
-    api.get<Patient[]>("/patients/").then(setPatients).finally(() => setLoading(false));
-  }, []);
-
   const todayStr = new Date().toISOString().slice(0, 10);
   const newToday = patients.filter((p) => p.created_at?.startsWith(todayStr)).length;
-  const activePatients = patients.filter((p) => p.is_active !== false).length;
 
-  const displayed = showInactive ? patients : patients.filter((p) => p.is_active !== false || p.is_active === undefined);
+  const displayed = patients;
   const totalPages = Math.ceil(displayed.length / PAGE_SIZE);
   const paginated = displayed.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
@@ -113,20 +106,7 @@ export function PatientsPage() {
           </div>
         </Card>
 
-        <Card className="border-border/70 shadow-sm rounded-2xl relative overflow-hidden group">
-          <CardContent className="p-6">
-            <div className="flex justify-between items-start mb-4">
-              <div className="p-3 bg-primary/10 rounded-xl text-primary group-hover:scale-110 transition-transform">
-                <AlertTriangle className="h-5 w-5" />
-              </div>
-            </div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Active Patients</p>
-            <p className="text-2xl font-bold text-foreground mt-1">{activePatients}</p>
-          </CardContent>
-          <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
-            <AlertTriangle className="h-28 w-28" />
-          </div>
-        </Card>
+
       </div>
 
       <div className="bg-white/70 backdrop-blur-xl border border-border/50 rounded-2xl p-4 flex flex-wrap gap-4 items-center justify-between shadow-sm">

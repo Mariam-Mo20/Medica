@@ -61,6 +61,10 @@ export function PatientsPage() {
     api.get<Patient[]>("/patients/").then(setPatients).finally(() => setLoading(false));
   }, []);
 
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const newToday = patients.filter((p) => p.created_at?.startsWith(todayStr)).length;
+  const activePatients = patients.filter((p) => p.is_active !== false).length;
+
   const displayed = showInactive ? patients : patients.filter((p) => p.is_active !== false || p.is_active === undefined);
   const totalPages = Math.ceil(displayed.length / PAGE_SIZE);
   const paginated = displayed.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -85,7 +89,6 @@ export function PatientsPage() {
               <div className="p-3 bg-primary/10 rounded-xl text-primary group-hover:scale-110 transition-transform">
                 <Users className="h-5 w-5" />
               </div>
-              <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">+4% vs last mo</span>
             </div>
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Patients</p>
             <p className="text-2xl font-bold text-foreground mt-1">{patients.length}</p>
@@ -101,10 +104,9 @@ export function PatientsPage() {
               <div className="p-3 bg-primary/10 rounded-xl text-primary group-hover:scale-110 transition-transform">
                 <Activity className="h-5 w-5" />
               </div>
-              <span className="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-1 rounded-full">12 today</span>
             </div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">New Admissions</p>
-            <p className="text-2xl font-bold text-foreground mt-1">—</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">New Admissions Today</p>
+            <p className="text-2xl font-bold text-foreground mt-1">{newToday}</p>
           </CardContent>
           <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
             <Activity className="h-28 w-28" />
@@ -117,10 +119,9 @@ export function PatientsPage() {
               <div className="p-3 bg-primary/10 rounded-xl text-primary group-hover:scale-110 transition-transform">
                 <AlertTriangle className="h-5 w-5" />
               </div>
-              <span className="text-xs font-medium text-primary bg-primary-container px-2 py-1 rounded-full">High Priority</span>
             </div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Critical Monitoring</p>
-            <p className="text-2xl font-bold text-foreground mt-1">—</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Active Patients</p>
+            <p className="text-2xl font-bold text-foreground mt-1">{activePatients}</p>
           </CardContent>
           <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
             <AlertTriangle className="h-28 w-28" />

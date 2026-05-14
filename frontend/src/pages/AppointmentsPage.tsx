@@ -127,7 +127,11 @@ export function AppointmentsPage() {
     const d = new Date(a.scheduled_at);
     return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
   }).length;
-  const completedCount = appointments.filter((a) => a.status === "completed").length;
+  const completedCount = appointments.filter((a) => {
+    if (a.status !== "completed") return false;
+    const d = new Date(a.scheduled_at);
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+  }).length;
 
   const handleStatusChange = async (aptId: number, newStatus: string) => {
     try {
@@ -335,7 +339,7 @@ export function AppointmentsPage() {
                 <tr className="bg-surface border-b border-border">
                   <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider w-10">#</th>
                   <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Patient Name</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Last Visit</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Appointment Date</th>
                   <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-center">Status</th>
                   <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-right">Actions</th>
                 </tr>
@@ -370,7 +374,14 @@ export function AppointmentsPage() {
                       </td>
                       <td className="px-6 py-4">
                         <div>
-                          <p className="text-sm font-medium text-foreground">{date}</p>
+                          <p className="text-sm font-medium text-foreground">
+                            {(() => {
+                              const d = new Date(apt.scheduled_at);
+                              return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate()
+                                ? "Today"
+                                : date;
+                            })()}
+                          </p>
                           <p className="text-xs text-muted-foreground">{time}</p>
                         </div>
                       </td>

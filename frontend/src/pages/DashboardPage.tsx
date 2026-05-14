@@ -1,37 +1,72 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
 import { DashboardStats } from "@/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Users, CalendarCheck, TrendingUp, Clock, ChevronLeft, ChevronRight } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { useAuthStore } from "@/store/authStore";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { StatsSkeleton } from "@/components/ui/skeleton";
+import {
+  Users,
+  Calendar,
+  TrendingUp,
+  Plus,
+  MoreVertical,
+  Download,
+  Activity,
+  CalendarCheck,
+} from "lucide-react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
-const statusBadgeColor: Record<string, "success" | "warning" | "info" | "destructive" | "default"> = {
-  scheduled: "info",
-  checked_in: "warning",
-  in_progress: "warning",
-  completed: "success",
-  cancelled: "destructive",
-  no_show: "destructive",
+const statusStyles: Record<string, string> = {
+  completed: "bg-emerald-50 text-emerald-700",
+  scheduled: "bg-amber-50 text-amber-700",
+  checked_in: "bg-blue-50 text-blue-700",
+  in_progress: "bg-purple-50 text-purple-700",
+  cancelled: "bg-gray-100 text-gray-500",
+  no_show: "bg-red-50 text-red-700",
 };
 
+const statusLabels: Record<string, string> = {
+  scheduled: "Pending",
+  checked_in: "Checked In",
+  in_progress: "In Progress",
+  completed: "Confirmed",
+  cancelled: "Cancelled",
+  no_show: "No Show",
+};
+
+function getInitials(name: string): string {
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+}
+
 export function DashboardPage() {
+  const navigate = useNavigate();
+  const { user } = useAuthStore();
   const [stats, setStats] = useState<DashboardStats | null>(null);
 
   useEffect(() => {
     api.get<DashboardStats>("/dashboard/").then(setStats);
   }, []);
 
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+
   if (!stats) {
-    return (
-      <div className="space-y-6 animate-pulse">
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          {[...Array(2)].map((_, i) => (
-            <div key={i} className="h-28 bg-white border border-gray-200 rounded-xl" />
-          ))}
-        </div>
-      </div>
-    );
+    return <StatsSkeleton />;
   }
 
   const chartData = stats.appointments_by_status.map((s) => ({
@@ -39,112 +74,180 @@ export function DashboardPage() {
     count: s.count,
   }));
 
+  const completionRate = stats.today_appointments
+    ? Math.round((stats.completed_appointments / stats.today_appointments) * 100)
+    : 0;
+
+  const upcomingVisits =
+    stats.today_appointments - stats.completed_appointments - stats.cancelled_appointments;
+
   return (
     <div className="space-y-8">
-      {/* Page Header */}
-      <div className="flex justify-between items-end">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="font-h1 text-h1 text-foreground">Dashboard</h1>
-          <p className="text-body-lg text-outline mt-1">Today's clinic overview</p>
+          <h1 className="text-2xl font-bold text-foreground">{greeting}, {user?.full_name?.split(" ")[0] || "there"}!</h1>
+          <p className="text-sm text-muted-foreground mt-1">Here's your clinic overview for today</p>
         </div>
+        <Button onClick={() => navigate("/appointments/new")} className="gap-2 rounded-lg h-10 shadow-sm">
+          <Plus className="h-4 w-4" />
+          New Appointment
+        </Button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <div className="bg-white border border-gray-200 p-6 rounded-xl shadow-sm">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-label-sm text-outline uppercase tracking-wider">Total Patients</p>
-              <h3 className="font-h1 text-h1 mt-1">{stats.total_patients}</h3>
-              <p className="text-body-sm text-outline mt-1">+{stats.new_patients_today} new today</p>
-            </div>
-            <div className="bg-blue-50 p-3 rounded-lg">
-              <Users className="h-6 w-6 text-primary" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white border border-gray-200 p-6 rounded-xl shadow-sm">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-label-sm text-outline uppercase tracking-wider">Today's Appointments</p>
-              <h3 className="font-h1 text-h1 mt-1">{stats.today_appointments}</h3>
-              <p className="text-body-sm text-outline mt-1">
-                {stats.completed_appointments} completed, {stats.pending_appointments} pending
-              </p>
-            </div>
-            <div className="bg-emerald-50 p-3 rounded-lg">
-              <CalendarCheck className="h-6 w-6 text-emerald-600" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Charts & Recent */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-          <div className="flex items-center gap-2 mb-6">
-            <TrendingUp className="h-5 w-5 text-primary" />
-            <h3 className="font-h3 text-h3">Appointments by Status</h3>
-          </div>
-          {chartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip
-                  contentStyle={{
-                    borderRadius: "8px",
-                    border: "1px solid #e2e8f0",
-                    boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
-                  }}
-                />
-                <Bar dataKey="count" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-12 text-outline">
-              <Clock className="h-8 w-8 mb-2" />
-              <p className="text-body-md">No appointments today</p>
-            </div>
-          )}
-        </div>
-
-        <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-          <div className="flex items-center gap-2 mb-6">
-            <Clock className="h-5 w-5 text-primary" />
-            <h3 className="font-h3 text-h3">Recent Appointments</h3>
-          </div>
-          <div className="space-y-2">
-            {stats.recent_appointments.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-12 text-outline">
-                <CalendarCheck className="h-8 w-8 mb-2" />
-                <p className="text-body-md">No recent appointments</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <Card className="border-border shadow-sm rounded-xl">
+          <CardContent className="p-5">
+            <div className="flex justify-between items-start mb-3">
+              <div className="p-2.5 bg-primary-container text-primary rounded-lg">
+                <Calendar className="h-5 w-5" />
               </div>
-            )}
-            {stats.recent_appointments.map((apt: any, idx: number) => (
+              <span className="flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full text-xs font-medium">
+                <TrendingUp className="h-3.5 w-3.5" />
+                +4% Today
+              </span>
+            </div>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Upcoming Visits</p>
+            <p className="text-2xl font-bold text-foreground mt-1">{Math.max(0, upcomingVisits)}</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border shadow-sm rounded-xl">
+          <CardContent className="p-5">
+            <div className="flex justify-between items-start mb-3">
+              <div className="p-2.5 bg-primary-container text-primary rounded-lg">
+                <CalendarCheck className="h-5 w-5" />
+              </div>
+              <span className="text-xs font-medium text-muted-foreground">{completionRate}% Done</span>
+            </div>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Today's Appointments</p>
+            <p className="text-2xl font-bold text-foreground mt-1">
+              {stats.completed_appointments} / {stats.today_appointments}
+            </p>
+            <div className="w-full bg-gray-100 h-1.5 rounded-full mt-3 overflow-hidden">
               <div
-                key={apt.id}
-                className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-xs">
-                    {idx + 1}
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-foreground">Appointment #{apt.id}</p>
-                    <p className="text-body-sm text-outline">
-                      {new Date(apt.scheduled_at).toLocaleTimeString()}
-                    </p>
-                  </div>
-                </div>
-                <Badge variant={statusBadgeColor[apt.status] || "default"}>
-                  {apt.status.replace("_", " ")}
-                </Badge>
+                className="bg-primary h-full rounded-full transition-all duration-500"
+                style={{ width: `${completionRate}%` }}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border shadow-sm rounded-xl">
+          <CardContent className="p-5">
+            <div className="flex justify-between items-start mb-3">
+              <div className="p-2.5 bg-primary-container text-primary rounded-lg">
+                <Users className="h-5 w-5" />
               </div>
-            ))}
-          </div>
+              <button
+                onClick={() => navigate("/appointments?status=completed")}
+                className="text-xs font-medium text-primary hover:underline"
+              >
+                View List
+              </button>
+            </div>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Completed Visits</p>
+            <p className="text-2xl font-bold text-foreground mt-1">{stats.completed_appointments}</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="lg:col-span-7 flex flex-col gap-6">
+          <Card className="border-border shadow-sm rounded-xl">
+            <CardContent className="p-5">
+              <div className="flex justify-between items-center mb-5">
+                <div>
+                  <h3 className="text-base font-semibold text-foreground">Clinical Analytics</h3>
+                  <p className="text-sm text-muted-foreground">Appointment distribution by status</p>
+                </div>
+                <Button variant="outline" size="sm" className="gap-2 text-muted-foreground rounded-lg border-border">
+                  <Download className="h-4 w-4" />
+                  Export
+                </Button>
+              </div>
+              {chartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={280}>
+                  <BarChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis dataKey="name" tick={{ fontSize: 12, fill: "#6b7280" }} />
+                    <YAxis tick={{ fontSize: 12, fill: "#6b7280" }} />
+                    <Tooltip
+                      contentStyle={{
+                        borderRadius: "8px",
+                        border: "1px solid #e5e7eb",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+                        fontSize: "13px",
+                      }}
+                    />
+                    <Bar dataKey="count" fill="#0f4c81" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+                  <Activity className="h-8 w-8 mb-2" />
+                  <p className="text-sm">No appointment data available</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="lg:col-span-5 flex flex-col gap-6">
+          <Card className="border-border shadow-sm rounded-xl">
+            <div className="px-5 py-4 border-b border-border flex justify-between items-center">
+              <h3 className="text-base font-semibold text-foreground">Recent Appointments</h3>
+              <Button
+                variant="ghost"
+                className="text-xs font-medium text-primary rounded-lg"
+                onClick={() => navigate("/appointments")}
+              >
+                View All
+              </Button>
+            </div>
+            <div className="divide-y divide-border">
+              {stats.recent_appointments.length === 0 ? (
+                <div className="px-5 py-12 text-center text-muted-foreground">
+                  <Calendar className="h-8 w-8 mx-auto mb-2" />
+                  <p className="text-sm">No recent appointments</p>
+                </div>
+              ) : (
+                stats.recent_appointments.slice(0, 5).map((apt: any) => {
+                  const name = apt.patient_name || `Patient #${apt.patient_id}`;
+                  const initials = getInitials(apt.patient_name || "");
+                  const time = apt.scheduled_at
+                    ? new Date(apt.scheduled_at).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
+                    : "—";
+
+                  return (
+                    <div key={apt.id} className="flex items-center justify-between px-5 py-3 hover:bg-accent/50 transition-colors">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-8 h-8 rounded-full bg-primary-container text-primary font-bold flex items-center justify-center text-xs shrink-0">
+                          {initials || "?"}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">{name}</p>
+                          <p className="text-xs text-muted-foreground">{time} · {apt.reason || "General"}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusStyles[apt.status] || "bg-gray-100 text-gray-500"}`}
+                        >
+                          {statusLabels[apt.status] || apt.status}
+                        </span>
+                        <button className="text-muted-foreground hover:text-foreground transition-colors p-1">
+                          <MoreVertical className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </Card>
         </div>
       </div>
     </div>

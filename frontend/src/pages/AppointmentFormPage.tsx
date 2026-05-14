@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "@/lib/api";
 import { Patient, Appointment } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,7 @@ const durationOptions = [
 
 export function AppointmentFormPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [patientSearch, setPatientSearch] = useState("");
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
@@ -50,6 +51,23 @@ export function AppointmentFormPage() {
   });
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const patientId = searchParams.get("patientId");
+    if (!patientId) return;
+
+    api
+      .get<Patient>(`/patients/${patientId}`)
+      .then((p) => {
+        setSelectedPatient(p);
+        setShowNewPatient(false);
+        setPatientSearch("");
+        setPatients([]);
+      })
+      .catch(() => {
+        /* ignore invalid patientId */
+      });
+  }, [searchParams]);
 
   const handlePatientSearch = async (q: string) => {
     setPatientSearch(q);

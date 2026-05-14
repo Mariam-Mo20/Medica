@@ -35,7 +35,9 @@ export function ConsultationPage() {
   useEffect(() => {
     if (!appointmentId) return;
     api.get<Appointment>(`/appointments/${appointmentId}`).then(setAppointment);
-    api.get<MedicalRecord[]>(`/medical-records/patient/0`).catch(() => {});
+    if (appointment) {
+      api.get<MedicalRecord[]>(`/medical-records/patient/${appointment.patient_id}`).catch(() => {});
+    }
   }, [appointmentId]);
 
   const addPrescriptionForm = () => {

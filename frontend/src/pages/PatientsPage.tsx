@@ -1,26 +1,53 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
 import { Patient } from "@/types";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Search, ChevronLeft, ChevronRight, Edit, Phone, User } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Search,
+  UserPlus,
+  ChevronLeft,
+  ChevronRight,
+  Users,
+  Activity,
+  AlertTriangle,
+  Filter,
+  ArrowUpDown,
+} from "lucide-react";
 
-const GENDERS = ["male", "female"];
+const PAGE_SIZE = 10;
 
-function getInitials(name: string) {
-  return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+function getInitials(first: string, last: string) {
+  const f = first?.[0] || "";
+  const l = last?.[0] || "";
+  return (f + l).toUpperCase().slice(0, 2) || "?";
 }
 
-function getAvatarColor(gender?: string) {
-  if (gender === "female") return "bg-secondary-fixed text-secondary";
-  return "bg-primary-fixed text-primary";
+function getAvatarColor(name: string) {
+  const colors = [
+    "bg-primary-container text-primary",
+    "bg-amber-100 text-amber-700",
+    "bg-emerald-100 text-emerald-700",
+    "bg-blue-100 text-blue-700",
+    "bg-purple-100 text-purple-700",
+    "bg-rose-100 text-rose-700",
+  ];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return colors[Math.abs(hash) % colors.length];
 }
 
 export function PatientsPage() {
+  const navigate = useNavigate();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [showInactive, setShowInactive] = useState(false);
 
   useEffect(() => {
     if (searchTerm.length >= 2) {
@@ -34,105 +61,228 @@ export function PatientsPage() {
     api.get<Patient[]>("/patients/").then(setPatients).finally(() => setLoading(false));
   }, []);
 
+  const displayed = showInactive ? patients : patients.filter((p) => p.is_active !== false || p.is_active === undefined);
+  const totalPages = Math.ceil(displayed.length / PAGE_SIZE);
+  const paginated = displayed.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   return (
     <div className="space-y-8">
-      <div className="flex justify-between items-end">
+      <div className="flex flex-wrap justify-between items-end gap-4">
         <div>
-          <h1 className="font-h1 text-h1 text-foreground">Patients</h1>
-          <p className="text-body-lg text-outline mt-1">Manage patient records</p>
+          <h1 className="text-2xl font-bold text-foreground">Patients</h1>
+          <p className="text-sm text-muted-foreground mt-1">Manage and monitor patient health records and clinical status.</p>
+        </div>
+        <Button onClick={() => navigate("/patients/new")} className="rounded-xl shadow-sm gap-2 h-11 px-5">
+          <UserPlus className="h-4 w-4" />
+          Add New Patient
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <Card className="border-border/70 shadow-sm rounded-2xl relative overflow-hidden group">
+          <CardContent className="p-6">
+            <div className="flex justify-between items-start mb-4">
+              <div className="p-3 bg-primary/10 rounded-xl text-primary group-hover:scale-110 transition-transform">
+                <Users className="h-5 w-5" />
+              </div>
+              <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">+4% vs last mo</span>
+            </div>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Patients</p>
+            <p className="text-2xl font-bold text-foreground mt-1">{patients.length}</p>
+          </CardContent>
+          <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
+            <Users className="h-28 w-28" />
+          </div>
+        </Card>
+
+        <Card className="border-border/70 shadow-sm rounded-2xl relative overflow-hidden group">
+          <CardContent className="p-6">
+            <div className="flex justify-between items-start mb-4">
+              <div className="p-3 bg-primary/10 rounded-xl text-primary group-hover:scale-110 transition-transform">
+                <Activity className="h-5 w-5" />
+              </div>
+              <span className="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-1 rounded-full">12 today</span>
+            </div>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">New Admissions</p>
+            <p className="text-2xl font-bold text-foreground mt-1">—</p>
+          </CardContent>
+          <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
+            <Activity className="h-28 w-28" />
+          </div>
+        </Card>
+
+        <Card className="border-border/70 shadow-sm rounded-2xl relative overflow-hidden group">
+          <CardContent className="p-6">
+            <div className="flex justify-between items-start mb-4">
+              <div className="p-3 bg-primary/10 rounded-xl text-primary group-hover:scale-110 transition-transform">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
+              <span className="text-xs font-medium text-primary bg-primary-container px-2 py-1 rounded-full">High Priority</span>
+            </div>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Critical Monitoring</p>
+            <p className="text-2xl font-bold text-foreground mt-1">—</p>
+          </CardContent>
+          <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
+            <AlertTriangle className="h-28 w-28" />
+          </div>
+        </Card>
+      </div>
+
+      <div className="bg-white/70 backdrop-blur-xl border border-border/50 rounded-2xl p-4 flex flex-wrap gap-4 items-center justify-between shadow-sm">
+        <div className="flex-1 min-w-[280px] relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by name, ID, or clinical condition..."
+            className="pl-11 h-12 bg-white border-border/60 rounded-xl text-sm focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" className="gap-2 rounded-xl border-border/60 h-12 px-4 bg-white">
+            <Filter className="h-4 w-4" />
+            Filters
+          </Button>
+          <Button variant="outline" className="gap-2 rounded-xl border-border/60 h-12 px-4 bg-white">
+            <ArrowUpDown className="h-4 w-4" />
+            Sort by: Recent
+          </Button>
         </div>
       </div>
 
-      {/* Search */}
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-outline" />
-        <Input
-          placeholder="Search by name, MRN, or phone..."
-          className="pl-10 h-11 bg-white border-gray-200"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-      </div>
-
-      {/* Table */}
-      <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-border/70 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="px-6 py-4 font-label-sm text-outline uppercase tracking-wider">Patient</th>
-                <th className="px-6 py-4 font-label-sm text-outline uppercase tracking-wider">MRN</th>
-                <th className="px-6 py-4 font-label-sm text-outline uppercase tracking-wider">Gender</th>
-                <th className="px-6 py-4 font-label-sm text-outline uppercase tracking-wider">Phone</th>
-                <th className="px-6 py-4 font-label-sm text-outline uppercase tracking-wider text-right">Actions</th>
+              <tr className="border-b border-border/50">
+                <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Patient Name</th>
+                <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Patient ID</th>
+                <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Last Visit</th>
+                <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
+                <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-border/30">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-body-md text-outline animate-pulse">
-                    Loading...
+                  <td colSpan={5} className="px-6 py-16 text-center text-sm text-muted-foreground">
+                    <div className="animate-pulse space-y-3 max-w-md mx-auto">
+                      {[...Array(4)].map((_, i) => (
+                        <div key={i} className="h-12 bg-gray-100 rounded-lg" />
+                      ))}
+                    </div>
                   </td>
                 </tr>
-              ) : patients.length === 0 ? (
+              ) : paginated.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-body-md text-outline">
-                    No patients found
+                  <td colSpan={5} className="px-6 py-16 text-center">
+                    <Users className="h-10 w-10 mx-auto mb-3 text-muted-foreground/40" />
+                    <p className="text-sm text-muted-foreground">No patients found</p>
                   </td>
                 </tr>
               ) : (
-                patients.map((patient) => (
-                  <tr key={patient.id} className="hover:bg-blue-50/30 transition-colors group">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-9 h-9 rounded-full ${getAvatarColor(patient.gender)} flex items-center justify-center font-bold text-sm`}>
-                          {getInitials(`${patient.first_name} ${patient.last_name}`)}
+                paginated.map((patient) => {
+                  const fullName = `${patient.first_name} ${patient.last_name}`;
+                  const initials = getInitials(patient.first_name, patient.last_name);
+                  const avatarColor = getAvatarColor(fullName);
+                  const age = patient.date_of_birth
+                    ? Math.floor((Date.now() - new Date(patient.date_of_birth).getTime()) / 31557600000)
+                    : null;
+
+                  return (
+                    <tr
+                      key={patient.id}
+                      className="hover:bg-primary/5 transition-colors cursor-pointer group"
+                      onClick={() => navigate(`/patients/${patient.id}`)}
+                    >
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${avatarColor}`}>
+                            {initials}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-foreground">{fullName}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {patient.gender === "male" ? "Male" : patient.gender === "female" ? "Female" : "—"}, {age ?? "—"} yrs
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <Link to={`/patients/${patient.id}`} className="font-label-md text-primary hover:underline">
-                            {patient.first_name} {patient.last_name}
-                          </Link>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <p className="text-body-md text-outline">{patient.medical_record_number}</p>
-                    </td>
-                    <td className="px-6 py-4">
-                      <Badge variant="outline" className="capitalize">{patient.gender || "—"}</Badge>
-                    </td>
-                    <td className="px-6 py-4">
-                      <p className="text-body-md text-outline">{patient.phone || "—"}</p>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Link
-                          to={`/patients/${patient.id}`}
-                          className="p-2 text-primary hover:bg-primary-fixed rounded-lg transition-colors"
-                          title="View patient"
-                        >
-                          <User className="h-4 w-4" />
-                        </Link>
-                        {patient.phone && (
-                          <a
-                            href={`tel:${patient.phone}`}
-                            className="p-2 text-primary hover:bg-primary-fixed rounded-lg transition-colors"
-                            title={`Call ${patient.phone}`}
-                          >
-                            <Phone className="h-4 w-4" />
-                          </a>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                      <td className="px-6 py-4 text-sm text-muted-foreground font-mono">#{patient.medical_record_number}</td>
+                      <td className="px-6 py-4 text-sm text-muted-foreground">—</td>
+                      <td className="px-6 py-4">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                          Active
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <button className="text-muted-foreground/60 group-hover:text-primary transition-colors">
+                          <ChevronRight className="h-5 w-5" />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
-        {!loading && patients.length > 0 && (
-          <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
-            <p className="text-body-sm text-outline">Showing {patients.length} patient{patients.length !== 1 ? "s" : ""}</p>
+        {!loading && displayed.length > 0 && (
+          <div className="px-6 py-4 border-t border-border/50 flex items-center justify-between bg-surface/50">
+            <p className="text-sm text-muted-foreground">
+              Showing <span className="font-medium text-foreground">1-{paginated.length}</span> of{" "}
+              <span className="font-medium text-foreground">{displayed.length}</span> patients
+            </p>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setPage(Math.max(1, page - 1))}
+                disabled={page <= 1}
+                className="w-9 h-9 flex items-center justify-center border border-border/60 rounded-lg text-muted-foreground hover:bg-accent transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              {(() => {
+                const pages: (number | string)[] = [];
+                if (totalPages <= 5) {
+                  for (let i = 1; i <= totalPages; i++) pages.push(i);
+                } else {
+                  pages.push(1);
+                  if (page > 3) pages.push("...");
+                  for (let i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i++) {
+                    pages.push(i);
+                  }
+                  if (page < totalPages - 2) pages.push("...");
+                  pages.push(totalPages);
+                }
+                return pages.map((p, i) =>
+                  typeof p === "string" ? (
+                    <span key={`e${i}`} className="w-9 h-9 flex items-center justify-center text-sm text-muted-foreground">
+                      ...
+                    </span>
+                  ) : (
+                    <button
+                      key={p}
+                      onClick={() => setPage(p)}
+                      className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${
+                        page === p
+                          ? "bg-primary text-on-primary shadow-sm"
+                          : "hover:bg-accent text-foreground border border-border/60"
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  ),
+                );
+              })()}
+              <button
+                onClick={() => setPage(Math.min(totalPages, page + 1))}
+                disabled={page >= totalPages}
+                className="w-9 h-9 flex items-center justify-center border border-border/60 rounded-lg text-muted-foreground hover:bg-accent transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         )}
       </div>

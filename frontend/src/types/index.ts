@@ -17,6 +17,7 @@ export interface AuthUser {
   tenant_id: number;
   tenant_slug?: string;
   tenant_name?: string;
+  phone?: string;
 }
 
 export interface Patient {

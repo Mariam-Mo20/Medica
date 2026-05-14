@@ -91,6 +91,7 @@ export function AppointmentsPage() {
   const [shareSuccess, setShareSuccess] = useState("");
   const [shareError, setShareError] = useState("");
   const [showTodayOnly, setShowTodayOnly] = useState(true);
+  const [shareModal, setShareModal] = useState<{ aptId: number; patientName: string } | null>(null);
 
   useEffect(() => {
     if (shareSuccess || shareError) {
@@ -154,13 +155,20 @@ export function AppointmentsPage() {
     }
   };
 
-  const handleShare = async (aptId: number, e: React.MouseEvent) => {
+  const handleShare = async (aptId: number, patientName: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    setShareModal({ aptId, patientName });
+  };
+
+  const confirmShare = async () => {
+    if (!shareModal) return;
     try {
-      const res = await api.post<{ id: number }>(`/notifications/share-appointment/${aptId}`);
-      setShareSuccess(`Patient shared with doctor successfully`);
+      const res = await api.post<{ message: string; notified_doctors: number }>(`/notifications/share-appointment/${shareModal.aptId}`);
+      setShareSuccess(res.message);
     } catch (err) {
       setShareError(err instanceof Error ? err.message : "Failed to share patient");
+    } finally {
+      setShareModal(null);
     }
   };
 
@@ -418,8 +426,8 @@ export function AppointmentsPage() {
                         <div className="flex items-center justify-end gap-1">
                           <button
                             className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
-                            title="Share patient with doctor"
-                            onClick={(e) => handleShare(apt.id, e)}
+                            title="Share patient with all doctors"
+                            onClick={(e) => handleShare(apt.id, name, e)}
                           >
                             <Share2 className="h-4 w-4" />
                           </button>
@@ -492,6 +500,28 @@ export function AppointmentsPage() {
           </div>
         )}
       </div>
+
+      {shareModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShareModal(null)}>
+          <div className="bg-white rounded-xl shadow-xl border border-border p-6 w-full max-w-sm mx-4" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-base font-semibold text-foreground mb-2">Share Patient</h3>
+            <p className="text-sm text-muted-foreground mb-1">
+              Share <span className="font-medium text-foreground">{shareModal.patientName}</span> with all doctors in the clinic?
+            </p>
+            <p className="text-xs text-muted-foreground mb-5">
+              Each doctor will receive a notification with a link to view the patient profile.
+            </p>
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" size="sm" onClick={() => setShareModal(null)} className="rounded-lg border-border">
+                Cancel
+              </Button>
+              <Button size="sm" onClick={confirmShare} className="rounded-lg shadow-sm">
+                Share
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

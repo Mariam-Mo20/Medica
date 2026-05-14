@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select, func, update
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.middleware.auth_middleware import get_current_user, require_role
@@ -8,8 +8,15 @@ from app.models.tenant import Tenant
 from app.models.user import User
 from app.models.notification import Notification
 from app.models.appointment import Appointment
+from app.models.doctor import Doctor
 from app.models.patient import Patient
+from pydantic import BaseModel
 from app.schemas.notification import NotificationResponse, NotificationListResponse
+
+
+class ShareResponse(BaseModel):
+    message: str
+    notified_doctors: int
 
 router = APIRouter()
 
@@ -82,7 +89,7 @@ async def mark_notification_read(
     return resp
 
 
-@router.post("/share-appointment/{appointment_id}", response_model=NotificationResponse)
+@router.post("/share-appointment/{appointment_id}")
 async def share_appointment_patient(
     appointment_id: int,
     db: AsyncSession = Depends(get_db),
@@ -108,38 +115,36 @@ async def share_appointment_patient(
 
     patient_name = f"{patient.first_name} {patient.last_name}"
 
-    from app.models.doctor import Doctor
-
-    if not appointment.doctor_id:
-        raise HTTPException(status_code=400, detail="No doctor assigned to this appointment")
-
-    doctor_result = await db.execute(
-        select(Doctor).where(Doctor.id == appointment.doctor_id)
+    doctor_users_result = await db.execute(
+        select(User).join(Doctor, Doctor.user_id == User.id).where(
+            Doctor.tenant_id == tenant.id,
+            User.is_active == True,
+        )
     )
-    doctor = doctor_result.scalar_one_or_none()
-    if not doctor:
-        raise HTTPException(status_code=400, detail="Doctor not found")
+    doctor_users = doctor_users_result.scalars().all()
 
-    doctor_user_result = await db.execute(
-        select(User).where(User.id == doctor.user_id)
-    )
-    doctor_user = doctor_user_result.scalar_one_or_none()
-    if not doctor_user:
-        raise HTTPException(status_code=400, detail="Doctor user not found")
+    if not doctor_users:
+        raise HTTPException(status_code=400, detail="No doctors found in the clinic")
 
-    notification = Notification(
-        tenant_id=tenant.id,
-        recipient_id=doctor_user.id,
-        sender_id=current_user.id,
-        notification_type="patient_shared",
-        title=f"Patient Shared: {patient_name}",
-        message=f"{current_user.full_name} shared patient {patient_name} with you.",
-        resource_type="patient",
-        resource_id=patient.id,
-    )
-    db.add(notification)
+    count = 0
+    for doctor_user in doctor_users:
+        if doctor_user.id == current_user.id:
+            continue
+        notification = Notification(
+            tenant_id=tenant.id,
+            recipient_id=doctor_user.id,
+            sender_id=current_user.id,
+            notification_type="patient_shared",
+            title=f"Patient Shared: {patient_name}",
+            message=f"{current_user.full_name} shared patient {patient_name} with you.",
+            resource_type="patient",
+            resource_id=patient.id,
+        )
+        db.add(notification)
+        count += 1
+
     await db.flush()
-
-    resp = NotificationResponse.model_validate(notification)
-    resp.sender_name = current_user.full_name
-    return resp
+    return ShareResponse(
+        message=f"Patient shared with {count} doctor{'s' if count != 1 else ''}",
+        notified_doctors=count,
+    )

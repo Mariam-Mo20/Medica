@@ -72,7 +72,24 @@ async def generate_series_instances(
 
 
 async def appointment_to_response(appointment: Appointment, db: AsyncSession) -> AppointmentResponse:
-    resp = AppointmentResponse.model_validate(appointment)
+    resp = AppointmentResponse(
+        id=appointment.id,
+        tenant_id=appointment.tenant_id,
+        patient_id=appointment.patient_id,
+        doctor_id=appointment.doctor_id,
+        receptionist_id=appointment.receptionist_id,
+        scheduled_at=appointment.scheduled_at,
+        duration_minutes=appointment.duration_minutes,
+        status=appointment.status,
+        reason=appointment.reason,
+        notes=appointment.notes,
+        recurring_rule=appointment.recurring_rule,
+        recurring_end_date=appointment.recurring_end_date,
+        series_id=appointment.series_id,
+        is_series_cancelled=appointment.is_series_cancelled,
+        created_at=appointment.created_at,
+        updated_at=appointment.updated_at,
+    )
 
     patient_result = await db.execute(select(Patient).where(Patient.id == appointment.patient_id))
     patient = patient_result.scalar_one_or_none()

@@ -14,6 +14,7 @@ import {
   Activity,
   Filter,
   ArrowUpDown,
+  Phone,
 } from "lucide-react";
 
 const PAGE_SIZE = 10;
@@ -75,7 +76,7 @@ export function PatientsPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-2xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <Card className="border-border/70 shadow-sm rounded-2xl relative overflow-hidden group">
           <CardContent className="p-6">
             <div className="flex justify-between items-start mb-4">
@@ -137,14 +138,13 @@ export function PatientsPage() {
             <thead>
               <tr className="border-b border-border/50">
                 <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Patient Name</th>
-                <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Patient ID</th>
                 <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/30">
               {loading ? (
                 <tr>
-                  <td colSpan={3} className="px-6 py-16 text-center text-sm text-muted-foreground">
+                  <td colSpan={2} className="px-6 py-16 text-center text-sm text-muted-foreground">
                     <div className="animate-pulse space-y-3 max-w-md mx-auto">
                       {[...Array(4)].map((_, i) => (
                         <div key={i} className="h-12 bg-gray-100 rounded-lg" />
@@ -154,7 +154,7 @@ export function PatientsPage() {
                 </tr>
               ) : paginated.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="px-6 py-16 text-center">
+                  <td colSpan={2} className="px-6 py-16 text-center">
                     <Users className="h-10 w-10 mx-auto mb-3 text-muted-foreground/40" />
                     <p className="text-sm text-muted-foreground">No patients found</p>
                   </td>
@@ -187,11 +187,22 @@ export function PatientsPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-muted-foreground font-mono">#{patient.medical_record_number}</td>
                       <td className="px-6 py-4">
-                        <button className="text-muted-foreground/60 group-hover:text-primary transition-colors">
-                          <ChevronRight className="h-5 w-5" />
-                        </button>
+                        <div className="flex items-center gap-1">
+                          {patient.phone && (
+                            <a
+                              href={`tel:${patient.phone}`}
+                              className="p-1.5 text-muted-foreground/60 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
+                              title={`Call ${patient.phone}`}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Phone className="h-4 w-4" />
+                            </a>
+                          )}
+                          <button className="text-muted-foreground/60 group-hover:text-primary transition-colors p-1.5">
+                            <ChevronRight className="h-5 w-5" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

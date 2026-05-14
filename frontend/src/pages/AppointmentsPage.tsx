@@ -374,7 +374,8 @@ export function AppointmentsPage() {
                       </td>
                       <td className="px-6 py-4">
                         <div>
-                          <p className="text-sm font-medium text-foreground">
+                          <p className="text-sm font-medium text-foreground">{time}</p>
+                          <p className="text-xs text-muted-foreground">
                             {(() => {
                               const d = new Date(apt.scheduled_at);
                               return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate()
@@ -382,7 +383,6 @@ export function AppointmentsPage() {
                                 : date;
                             })()}
                           </p>
-                          <p className="text-xs text-muted-foreground">{time}</p>
                         </div>
                       </td>
                       <td className="px-6 py-4 text-center">

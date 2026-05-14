@@ -132,14 +132,9 @@ export function AppointmentsPage() {
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  const totalBooked = appointments.length;
-  const pendingConfirmation = appointments.filter((a) => a.status === "scheduled").length;
-  const cancelledCount = appointments.filter((a) => a.status === "cancelled").length;
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const totalBooked = appointments.filter((a) => a.scheduled_at?.startsWith(todayStr)).length;
   const completedCount = appointments.filter((a) => a.status === "completed").length;
-  const clinicCapacity =
-    appointments.length > 0
-      ? Math.round((completedCount / appointments.length) * 100)
-      : 0;
 
   const handleStatusChange = async (aptId: number, newStatus: string) => {
     try {
@@ -226,18 +221,15 @@ export function AppointmentsPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <Card className="border-border shadow-sm rounded-xl">
           <CardContent className="p-5">
             <div className="flex justify-between items-start mb-3">
               <div className="p-2 bg-primary-container rounded-lg text-primary">
                 <CalendarCheck className="h-5 w-5" />
               </div>
-              <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-                +12%
-              </span>
             </div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Booked</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Booked Today</p>
             <p className="text-2xl font-bold text-foreground mt-1">{totalBooked}</p>
           </CardContent>
         </Card>
@@ -245,46 +237,13 @@ export function AppointmentsPage() {
         <Card className="border-border shadow-sm rounded-xl">
           <CardContent className="p-5">
             <div className="flex justify-between items-start mb-3">
-              <div className="p-2 bg-primary-container rounded-lg text-primary">
-                <Clock className="h-5 w-5" />
+              <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600">
+                <CalendarCheck className="h-5 w-5" />
               </div>
             </div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Pending Confirmation</p>
-            <p className="text-2xl font-bold text-foreground mt-1">{pendingConfirmation}</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Completed</p>
+            <p className="text-2xl font-bold text-foreground mt-1">{completedCount}</p>
           </CardContent>
-        </Card>
-
-        <Card className="border-border shadow-sm rounded-xl">
-          <CardContent className="p-5">
-            <div className="flex justify-between items-start mb-3">
-              <div className="p-2 bg-red-50 rounded-lg text-red-600">
-                <XCircle className="h-5 w-5" />
-              </div>
-              <span className="text-xs font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-full">
-                -5%
-              </span>
-            </div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Cancellations</p>
-            <p className="text-2xl font-bold text-foreground mt-1">{cancelledCount}</p>
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-xl shadow-sm relative overflow-hidden border-0 bg-primary text-on-primary">
-          <CardContent className="p-5 relative z-10">
-            <p className="text-xs font-medium text-white/80 uppercase tracking-wider mb-2">
-              Clinic Capacity
-            </p>
-            <p className="text-2xl font-bold">{clinicCapacity}%</p>
-            <div className="w-full bg-white/30 h-1.5 rounded-full mt-3">
-              <div
-                className="bg-white h-full rounded-full transition-all duration-500"
-                style={{ width: `${clinicCapacity}%` }}
-              />
-            </div>
-          </CardContent>
-          <div className="absolute -right-4 -bottom-4 opacity-10">
-            <Activity className="h-24 w-24" />
-          </div>
         </Card>
       </div>
 

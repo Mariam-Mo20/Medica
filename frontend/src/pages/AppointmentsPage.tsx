@@ -10,14 +10,10 @@ import {
   Download,
   Search,
   CalendarCheck,
-  Clock,
-  XCircle,
-  Activity,
-  Stethoscope,
   ChevronLeft,
   ChevronRight,
-  MoreVertical,
   X,
+  Phone,
 } from "lucide-react";
 
 const AVATAR_COLORS = [
@@ -332,85 +328,48 @@ export function AppointmentsPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-surface border-b border-border">
-                  <th className="p-4 border-b border-border w-12">
-                    <input
-                      type="checkbox"
-                      checked={paginated.length > 0 && selectedIds.size === paginated.length}
-                      onChange={toggleSelectAll}
-                      className="rounded border-gray-300 text-primary focus:ring-primary"
-                    />
-                  </th>
-                  <th className="p-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Patient Name
-                  </th>
-                  <th className="p-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Date & Time
-                  </th>
-                  <th className="p-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Provider
-                  </th>
-                  <th className="p-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Visit Type
-                  </th>
-                  <th className="p-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="p-4" />
+                  <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider w-10">#</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Patient Name</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Last Visit</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="text-sm">
-                {paginated.map((apt) => {
+                {paginated.map((apt, idx) => {
                   const { date, time } = formatDate(apt.scheduled_at);
                   const name = apt.patient_name || `Patient #${apt.patient_id}`;
                   const initials = getInitials(apt.patient_name || "");
                   const avatarColor = getAvatarColor(apt.patient_name || apt.patient_id.toString());
 
-                  return (
+                   return (
                     <tr
                       key={apt.id}
-                      className="hover:bg-accent/50 transition-colors border-b border-border"
+                      className="hover:bg-primary/5 transition-colors border-b border-border group"
                     >
-                      <td className="p-4">
-                        <input
-                          type="checkbox"
-                          checked={selectedIds.has(apt.id)}
-                          onChange={() => toggleSelect(apt.id)}
-                          className="rounded border-gray-300 text-primary focus:ring-primary"
-                        />
+                      <td className="px-6 py-4 text-sm text-muted-foreground font-medium">
+                        {(page - 1) * PAGE_SIZE + idx + 1}
                       </td>
-                      <td className="p-4">
+                      <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div
-                            className={`h-9 w-9 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${avatarColor}`}
+                            className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${avatarColor}`}
                           >
                             {initials || "?"}
                           </div>
                           <div>
-                            <p className="font-medium text-foreground">{name}</p>
+                            <p className="text-sm font-medium text-foreground">{name}</p>
                             <p className="text-xs text-muted-foreground">ID: #{apt.patient_id}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="p-4">
+                      <td className="px-6 py-4">
                         <div>
-                          <p className="font-medium text-foreground">{date}</p>
+                          <p className="text-sm font-medium text-foreground">{date}</p>
                           <p className="text-xs text-muted-foreground">{time}</p>
                         </div>
                       </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-2">
-                          <Stethoscope className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-foreground">
-                            {apt.doctor_name || "—"}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <span className="px-2.5 py-0.5 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
-                          {apt.reason || "General"}
-                        </span>
-                      </td>
-                      <td className="p-4">
+                      <td className="px-6 py-4">
                         <select
                           value={apt.status}
                           onChange={(e) => handleStatusChange(apt.id, e.target.value)}
@@ -423,10 +382,20 @@ export function AppointmentsPage() {
                           ))}
                         </select>
                       </td>
-                      <td className="p-4 text-right">
-                        <button className="p-1.5 hover:bg-accent rounded-lg transition-colors">
-                          <MoreVertical className="h-4 w-4 text-muted-foreground" />
-                        </button>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
+                            title="Call patient"
+                            disabled
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Phone className="h-4 w-4" />
+                          </button>
+                          <button className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg transition-colors">
+                            <ChevronRight className="h-4 w-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

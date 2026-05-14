@@ -33,7 +33,7 @@ async function handleErr(res: Response): Promise<never> {
     if (Array.isArray(b.detail)) {
       msg = b.detail.map((e: any) => e.msg || String(e)).join("; ");
     } else {
-      msg = b.detail || b.message || msg;
+      msg = b.message || b.detail || msg;
     }
   } catch { try { const t = await res.text(); if (t) msg += `: ${t.slice(0, 200)}`; } catch {} }
   throw new Error(msg);

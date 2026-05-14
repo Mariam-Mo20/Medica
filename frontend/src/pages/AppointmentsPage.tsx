@@ -142,14 +142,14 @@ export function AppointmentsPage() {
 
   const handleStatusChange = async (aptId: number, newStatus: string) => {
     try {
-      await api.patch(`/appointments/${aptId}/status`, { status: newStatus });
+      await api.put(`/appointments/${aptId}`, { status: newStatus });
       setAppointments((prev) =>
         prev.map((a) => (a.id === aptId ? { ...a, status: newStatus } : a)),
       );
       setShareSuccess(`Appointment #${aptId} updated to "${statusLabels[newStatus] || newStatus}"`);
     } catch (err) {
-      setShareError(err instanceof Error ? err.message : "Failed to update status");
-      fetchAppointments();
+      const msg = err instanceof Error ? err.message : "Failed to update status";
+      setShareError(msg);
     }
   };
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
-import { DashboardStats } from "@/types";
+import { Appointment, DashboardStats } from "@/types";
 import { useAuthStore } from "@/store/authStore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -57,9 +57,16 @@ export function DashboardPage() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [recentAppointments, setRecentAppointments] = useState<Appointment[]>([]);
 
   useEffect(() => {
-    api.get<DashboardStats>("/dashboard/").then(setStats);
+    Promise.all([
+      api.get<DashboardStats>("/dashboard/"),
+      api.get<Appointment[]>("/appointments/?limit=100"),
+    ]).then(([dashboardStats, appointments]) => {
+      setStats(dashboardStats);
+      setRecentAppointments(appointments);
+    });
   }, []);
 
   const hour = new Date().getHours();
@@ -69,9 +76,14 @@ export function DashboardPage() {
     return <StatsSkeleton />;
   }
 
-  const chartData = stats.appointments_by_status.map((s) => ({
-    name: s.status.replace("_", " ").replace(/\b\w/g, (c) => c.toUpperCase()),
-    count: s.count,
+  const statusCounts = recentAppointments.reduce<Record<string, number>>((acc, apt) => {
+    acc[apt.status] = (acc[apt.status] || 0) + 1;
+    return acc;
+  }, {});
+
+  const chartData = Object.entries(statusCounts).map(([status, count]) => ({
+    name: status.replace("_", " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+    count,
   }));
 
   const completionRate = stats.today_appointments
@@ -103,11 +115,11 @@ export function DashboardPage() {
               </div>
               <span className="flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full text-xs font-medium">
                 <TrendingUp className="h-3.5 w-3.5" />
-                +4% Today
+                +{stats.new_patients_today} today
               </span>
             </div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Upcoming Visits</p>
-            <p className="text-2xl font-bold text-foreground mt-1">{Math.max(0, upcomingVisits)}</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Patients</p>
+            <p className="text-2xl font-bold text-foreground mt-1">{stats.total_patients}</p>
           </CardContent>
         </Card>
 
@@ -139,14 +151,15 @@ export function DashboardPage() {
                 <Users className="h-5 w-5" />
               </div>
               <button
-                onClick={() => navigate("/appointments?status=completed")}
+                onClick={() => navigate("/appointments?status=scheduled")}
                 className="text-xs font-medium text-primary hover:underline"
               >
                 View List
               </button>
             </div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Completed Visits</p>
-            <p className="text-2xl font-bold text-foreground mt-1">{stats.completed_appointments}</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Active Doctors</p>
+            <p className="text-2xl font-bold text-foreground mt-1">{stats.active_doctors}</p>
+            <p className="text-xs text-muted-foreground mt-1">Pending visits: {Math.max(0, upcomingVisits)}</p>
           </CardContent>
         </Card>
       </div>
@@ -205,13 +218,13 @@ export function DashboardPage() {
               </Button>
             </div>
             <div className="divide-y divide-border">
-              {stats.recent_appointments.length === 0 ? (
-                <div className="px-5 py-12 text-center text-muted-foreground">
-                  <Calendar className="h-8 w-8 mx-auto mb-2" />
-                  <p className="text-sm">No recent appointments</p>
-                </div>
-              ) : (
-                stats.recent_appointments.slice(0, 5).map((apt: any) => {
+               {recentAppointments.length === 0 ? (
+                 <div className="px-5 py-12 text-center text-muted-foreground">
+                   <Calendar className="h-8 w-8 mx-auto mb-2" />
+                   <p className="text-sm">No recent appointments</p>
+                 </div>
+               ) : (
+                recentAppointments.slice(0, 5).map((apt) => {
                   const name = apt.patient_name || `Patient #${apt.patient_id}`;
                   const initials = getInitials(apt.patient_name || "");
                   const time = apt.scheduled_at
@@ -224,9 +237,11 @@ export function DashboardPage() {
                   return (
                     <div key={apt.id} className="flex items-center justify-between px-5 py-3 hover:bg-accent/50 transition-colors">
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-8 h-8 rounded-full bg-primary-container text-primary font-bold flex items-center justify-center text-xs shrink-0">
-                          {initials || "?"}
-                        </div>
+                        <img
+                          src={`https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=E8F0FE&color=0F4C81&size=64`}
+                          alt={name}
+                          className="w-8 h-8 rounded-full border border-border shrink-0"
+                        />
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-foreground truncate">{name}</p>
                           <p className="text-xs text-muted-foreground">{time} · {apt.reason || "General"}</p>

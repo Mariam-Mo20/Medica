@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { DateInput } from "@/components/ui/date-input";
+import { parseDateToISO } from "@/lib/date";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Save } from "lucide-react";
 
@@ -35,7 +36,19 @@ export function PatientFormPage() {
     setSaving(true);
     setError("");
     try {
-      await api.post<Patient>("/patients/", form);
+      if (!form.date_of_birth) throw new Error("Date of birth is required");
+      const dob = parseDateToISO(form.date_of_birth);
+      if (!dob) throw new Error("Invalid date of birth format. Use dd/mm/yyyy");
+      const payload: Record<string, unknown> = {
+        first_name: form.first_name,
+        last_name: form.last_name,
+        date_of_birth: dob,
+      };
+      if (form.gender) payload.gender = form.gender;
+      if (form.phone) payload.phone = form.phone;
+      if (form.email) payload.email = form.email;
+      if (form.address) payload.address = form.address;
+      await api.post<Patient>("/patients/", payload);
       navigate("/patients");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to register patient");

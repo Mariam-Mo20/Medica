@@ -143,10 +143,16 @@ export function AppointmentsPage() {
   const handleStatusChange = async (aptId: number, newStatus: string) => {
     try {
       await api.put(`/appointments/${aptId}`, { status: newStatus });
+      setShareSuccess(`Appointment #${aptId} updated to "${statusLabels[newStatus] || newStatus}"`);
       fetchAppointments();
-    } catch {
-      /* ignore */
+    } catch (err) {
+      setShareError(err instanceof Error ? err.message : "Failed to update status");
     }
+  };
+
+  const handleDismissAlert = () => {
+    setShareSuccess("");
+    setShareError("");
   };
 
   const toggleSelect = (id: number) => {

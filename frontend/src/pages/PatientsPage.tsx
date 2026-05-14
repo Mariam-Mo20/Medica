@@ -188,19 +188,22 @@ export function PatientsPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           {patient.phone && (
                             <a
                               href={`tel:${patient.phone}`}
-                              className="p-1.5 text-muted-foreground/60 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
+                              className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
                               title={`Call ${patient.phone}`}
                               onClick={(e) => e.stopPropagation()}
                             >
                               <Phone className="h-4 w-4" />
                             </a>
                           )}
-                          <button className="text-muted-foreground/60 group-hover:text-primary transition-colors p-1.5">
-                            <ChevronRight className="h-5 w-5" />
+                          <button
+                            className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
+                            title="View patient"
+                          >
+                            <ChevronRight className="h-4 w-4" />
                           </button>
                         </div>
                       </td>

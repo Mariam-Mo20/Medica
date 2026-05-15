@@ -32,17 +32,16 @@ export function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [toastNotification, setToastNotification] = useState<Notification | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
-  const lastShownId = useRef<number | null>(null);
-  const dismissedIds = useRef<Set<number>>(new Set());
+  const lastProcessedId = useRef<number | null>(null);
 
   const fetchNotifications = () => {
     api.get<NotificationList>("/notifications/").then((data) => {
       setUnreadCount(data.unread_count);
       const unread = data.notifications.find(
-        (n) => !n.is_read && !dismissedIds.current.has(n.id) && n.id !== lastShownId.current,
+        (n) => !n.is_read && n.id !== lastProcessedId.current,
       );
       if (unread) {
-        lastShownId.current = unread.id;
+        lastProcessedId.current = unread.id;
         setToastNotification(unread);
       }
     }).catch(() => {});
@@ -59,6 +58,7 @@ export function Layout() {
       await api.patch(`/notifications/${notification.id}/read`);
       setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch {}
+    lastProcessedId.current = notification.id;
     setToastNotification(null);
     if (notification.resource_type === "patient" && notification.resource_id) {
       navigate(`/patients/${notification.resource_id}`);
@@ -67,7 +67,7 @@ export function Layout() {
 
   const handleDismissToast = () => {
     if (toastNotification) {
-      dismissedIds.current.add(toastNotification.id);
+      lastProcessedId.current = toastNotification.id;
       setToastNotification(null);
     }
   };

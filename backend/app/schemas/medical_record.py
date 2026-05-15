@@ -21,7 +21,7 @@ class MedicalRecordResponse(BaseModel):
     tenant_id: int
     patient_id: int
     appointment_id: int | None = None
-    doctor_id: int
+    doctor_id: int | None = None
     diagnosis: str | None
     symptoms: str | None
     visit_notes: str | None

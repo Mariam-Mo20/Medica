@@ -17,6 +17,15 @@ async def get_dashboard_stats(db: AsyncSession, tenant_id: int) -> DashboardStat
     )
     total_patients = total_patients_result.scalar() or 0
 
+    patients_today_result = await db.execute(
+        select(func.count(func.distinct(Appointment.patient_id))).where(
+            Appointment.tenant_id == tenant_id,
+            Appointment.scheduled_at >= today_start,
+            Appointment.scheduled_at <= today_end,
+        )
+    )
+    patients_today = patients_today_result.scalar() or 0
+
     new_patients_today_result = await db.execute(
         select(func.count(Patient.id)).where(
             Patient.tenant_id == tenant_id,
@@ -104,6 +113,7 @@ async def get_dashboard_stats(db: AsyncSession, tenant_id: int) -> DashboardStat
 
     return DashboardStats(
         total_patients=total_patients,
+        patients_today=patients_today,
         today_appointments=today_appointments,
         completed_appointments=completed_appointments,
         cancelled_appointments=cancelled_appointments,

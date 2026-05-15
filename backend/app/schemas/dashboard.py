@@ -4,6 +4,7 @@ from typing import Any
 
 class DashboardStats(BaseModel):
     total_patients: int = 0
+    patients_today: int = 0
     today_appointments: int = 0
     completed_appointments: int = 0
     cancelled_appointments: int = 0

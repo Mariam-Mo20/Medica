@@ -14,7 +14,7 @@ import {
   Settings,
   ClipboardList,
   Search,
-  Bell,
+  BellDot,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -33,12 +33,27 @@ export function Layout() {
   const [toastNotification, setToastNotification] = useState<Notification | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const lastProcessedId = useRef<number | null>(null);
+  const initialized = useRef(false);
+  const hiddenNotificationIds = useRef<Set<number>>(new Set());
 
   const fetchNotifications = () => {
     api.get<NotificationList>("/notifications/").then((data) => {
       setUnreadCount(data.unread_count);
       const unread = data.notifications.filter((n) => !n.is_read);
-      const newUnread = unread.find((n) => n.id !== lastProcessedId.current);
+      if (!initialized.current) {
+        initialized.current = true;
+        if (unread.length > 0) {
+          lastProcessedId.current = Math.max(...unread.map((n) => n.id));
+        }
+        return;
+      }
+
+      const newUnread = unread.find(
+        (n) =>
+          !hiddenNotificationIds.current.has(n.id) &&
+          n.id !== lastProcessedId.current &&
+          (lastProcessedId.current === null || n.id > lastProcessedId.current)
+      );
       if (newUnread) {
         lastProcessedId.current = newUnread.id;
         setToastNotification(newUnread);
@@ -52,11 +67,14 @@ export function Layout() {
     return () => clearInterval(interval);
   }, []);
 
+  const isNotifsPage = location.pathname === "/notifications";
+
   const handleViewPatient = async (notification: Notification) => {
     try {
       await api.patch(`/notifications/${notification.id}/read`);
       setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch {}
+    hiddenNotificationIds.current.add(notification.id);
     lastProcessedId.current = notification.id;
     setToastNotification(null);
     if (notification.resource_type === "patient" && notification.resource_id) {
@@ -67,6 +85,7 @@ export function Layout() {
   const handleDismissToast = () => {
     if (toastNotification) {
       const n = toastNotification;
+      hiddenNotificationIds.current.add(n.id);
       lastProcessedId.current = n.id;
       setToastNotification(null);
       setUnreadCount((prev) => Math.max(0, prev - 1));
@@ -131,6 +150,26 @@ export function Layout() {
 
         <div className="mt-auto px-3 pt-4 pb-4 border-t border-border space-y-0.5">
           <Link
+            to="/notifications"
+            onClick={() => setSidebarOpen(false)}
+            className={cn(
+              "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 text-sm",
+              location.pathname === "/notifications"
+                ? "bg-primary-container text-primary font-semibold"
+                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+            )}
+          >
+            <div className="relative">
+              <BellDot className="h-4.5 w-4.5" />
+              {!isNotifsPage && unreadCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-destructive text-destructive-foreground text-[8px] font-bold rounded-full flex items-center justify-center">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
+            </div>
+            Notifications
+          </Link>
+          <Link
             to="/administration"
             onClick={() => setSidebarOpen(false)}
             className={cn(
@@ -174,14 +213,6 @@ export function Layout() {
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <button className="relative p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors">
-              <Bell className="h-5 w-5" />
-              {unreadCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
-                  {unreadCount > 9 ? "9+" : unreadCount}
-                </span>
-              )}
-            </button>
             <div className="flex items-center gap-3">
               <div className="text-right hidden sm:block">
                 <p className="text-sm font-semibold text-foreground leading-none">{user?.full_name}</p>

@@ -20,6 +20,7 @@ import { SignupCompletePage } from "@/pages/SignupCompletePage";
 import { ConsultationPage } from "@/pages/ConsultationPage";
 import { AdministrationPage } from "@/pages/AdministrationPage";
 import { SettingsPage } from "@/pages/SettingsPage";
+import { NotificationsPage } from "@/pages/NotificationsPage";
 
 export default function App() {
   const { fetchMe } = useAuthStore();
@@ -53,6 +54,7 @@ export default function App() {
           <Route path="/appointments" element={<AppointmentsPage />} />
           <Route path="/appointments/new" element={<AppointmentFormPage />} />
           <Route path="/consultation/:appointmentId" element={<ConsultationPage />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/administration" element={<AdministrationPage />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Route>

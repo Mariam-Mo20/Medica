@@ -14,6 +14,7 @@ import {
   ChevronRight,
   Phone,
   Share2,
+  X,
 } from "lucide-react";
 
 const AVATAR_COLORS = [
@@ -502,22 +503,37 @@ export function AppointmentsPage() {
       </div>
 
       {shareModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShareModal(null)}>
-          <div className="bg-white rounded-xl shadow-xl border border-border p-6 w-full max-w-sm mx-4" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-base font-semibold text-foreground mb-2">Share Patient</h3>
-            <p className="text-sm text-muted-foreground mb-1">
-              Share <span className="font-medium text-foreground">{shareModal.patientName}</span> with all doctors in the clinic?
-            </p>
-            <p className="text-xs text-muted-foreground mb-5">
-              Each doctor will receive a notification with a link to view the patient profile.
-            </p>
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" size="sm" onClick={() => setShareModal(null)} className="rounded-lg border-border">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xl p-6" onClick={() => setShareModal(null)}>
+          <div className="bg-card w-full max-w-[480px] rounded-xl shadow-2xl border border-border/50 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="px-8 pt-8 pb-6 flex justify-between items-start">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-primary-container rounded-lg flex items-center justify-center">
+                  <Share2 className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h2 className="font-h2 text-h2 text-foreground">Share with Doctors</h2>
+                  <p className="text-body-sm text-body-sm text-muted-foreground">Digital Record Transmission</p>
+                </div>
+              </div>
+              <button onClick={() => setShareModal(null)} className="text-muted-foreground hover:text-foreground transition-colors">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="px-8 pb-8 space-y-8">
+              <div className="bg-muted rounded-lg p-4 border border-border/30">
+                <p className="text-body-md text-body-md text-foreground leading-relaxed">
+                  Are you sure you want to share <span className="font-bold">{shareModal.patientName}'s</span> profile with all doctors in the clinic?
+                </p>
+              </div>
+            </div>
+            <div className="px-8 py-6 bg-muted/50 border-t border-border/50 flex gap-4 justify-end">
+              <button onClick={() => setShareModal(null)} className="px-6 h-[48px] rounded-lg font-label-md text-label-md text-muted-foreground hover:bg-accent transition-all active:scale-95">
                 Cancel
-              </Button>
-              <Button size="sm" onClick={confirmShare} className="rounded-lg shadow-sm">
-                Share
-              </Button>
+              </button>
+              <button onClick={confirmShare} className="px-8 h-[48px] bg-primary text-primary-foreground rounded-lg font-label-md text-label-md hover:bg-primary/90 shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center gap-2">
+                Confirm & Share
+                <Share2 className="h-4 w-4" />
+              </button>
             </div>
           </div>
         </div>

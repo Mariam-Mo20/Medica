@@ -100,6 +100,7 @@ export interface Prescription {
 
 export interface DashboardStats {
   total_patients: number;
+  patients_today: number;
   today_appointments: number;
   completed_appointments: number;
   cancelled_appointments: number;

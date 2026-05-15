@@ -109,8 +109,8 @@ export function DashboardPage() {
                 <Calendar className="h-5 w-5" />
               </div>
             </div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Patients</p>
-            <p className="text-2xl font-bold text-foreground mt-1">{stats.total_patients}</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">New Patients Today</p>
+            <p className="text-2xl font-bold text-foreground mt-1">{stats.new_patients_today}</p>
           </CardContent>
         </Card>
 

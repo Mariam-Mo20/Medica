@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Save, UserPlus, Pencil, X, Check, Copy, Share2, LinkIcon } from "lucide-react";
+import { Pencil, X, Check, Copy, Share2, LinkIcon } from "lucide-react";
 
 const roleOptions = [
   { value: "doctor", label: "Doctor" },
@@ -15,9 +15,6 @@ const roleOptions = [
 
 export function AdministrationPage() {
   const [users, setUsers] = useState<User[]>([]);
-  const [userForm, setUserForm] = useState({ email: "", password: "", full_name: "", role: "doctor", phone: "" });
-  const [showUserForm, setShowUserForm] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState({ full_name: "", role: "", phone: "" });
@@ -35,22 +32,6 @@ export function AdministrationPage() {
       const u = await api.get<User[]>("/users/");
       setUsers(u);
     } catch { /* ignore */ }
-  };
-
-  const handleCreateUser = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    setError("");
-    try {
-      const user = await api.post<User>("/users/", userForm);
-      setUsers([user, ...users]);
-      setShowUserForm(false);
-      setUserForm({ email: "", password: "", full_name: "", role: "doctor", phone: "" });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create user");
-    } finally {
-      setSaving(false);
-    }
   };
 
   const startEdit = (user: User) => {
@@ -172,48 +153,7 @@ export function AdministrationPage() {
             <h2 className="font-h3 text-h3 text-foreground">Staff Accounts</h2>
             <p className="text-body-sm text-outline mt-0.5">{users.length} team members</p>
           </div>
-          <Button size="sm" onClick={() => setShowUserForm(!showUserForm)}>
-            <UserPlus className="h-4 w-4 mr-2" />
-            Add User
-          </Button>
         </div>
-
-        {showUserForm && (
-          <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-            <h3 className="font-label-md text-foreground mb-4">New User</h3>
-            <form onSubmit={handleCreateUser} className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label className="text-label-sm text-outline uppercase tracking-wider">Full Name</Label>
-                  <Input value={userForm.full_name} onChange={(e) => setUserForm({ ...userForm, full_name: e.target.value })} required />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-label-sm text-outline uppercase tracking-wider">Email</Label>
-                  <Input type="email" value={userForm.email} onChange={(e) => setUserForm({ ...userForm, email: e.target.value })} required />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-label-sm text-outline uppercase tracking-wider">Password</Label>
-                  <Input type="password" value={userForm.password} onChange={(e) => setUserForm({ ...userForm, password: e.target.value })} required />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-label-sm text-outline uppercase tracking-wider">Role</Label>
-                  <Select options={roleOptions} value={userForm.role} onChange={(e) => setUserForm({ ...userForm, role: e.target.value })} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-label-sm text-outline uppercase tracking-wider">Phone</Label>
-                  <Input value={userForm.phone} onChange={(e) => setUserForm({ ...userForm, phone: e.target.value })} />
-                </div>
-              </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <Button type="button" variant="outline" size="sm" onClick={() => setShowUserForm(false)}>Cancel</Button>
-                <Button type="submit" size="sm" disabled={saving}>
-                  <Save className="h-3 w-3 mr-1" />
-                  {saving ? "Creating..." : "Create User"}
-                </Button>
-              </div>
-            </form>
-          </div>
-        )}
 
         {/* Users Table */}
         <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">

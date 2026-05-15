@@ -28,6 +28,21 @@ export function NotificationsPage() {
     fetchNotifications();
   }, []);
 
+  useEffect(() => {
+    const markAllVisibleRead = async () => {
+      try {
+        const unread = notifications.filter((n) => !n.is_read);
+        if (unread.length === 0) return;
+        await Promise.all(unread.map((n) => api.patch(`/notifications/${n.id}/read`).catch(() => null)));
+        setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+        setUnreadCount(0);
+      } catch {
+        /* ignore */
+      }
+    };
+    markAllVisibleRead();
+  }, [notifications.length]);
+
   const handleMarkRead = async (id: number) => {
     try {
       await api.patch(`/notifications/${id}/read`);

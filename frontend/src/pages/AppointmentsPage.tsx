@@ -7,7 +7,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Plus,
-  Download,
   Search,
   CalendarCheck,
   ChevronLeft,
@@ -81,6 +80,21 @@ function isToday(dateStr: string) {
   return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
 }
 
+function timeAgo(dateStr: string) {
+  const d = new Date(dateStr).getTime();
+  const diff = Math.max(0, Date.now() - d);
+  const days = Math.floor(diff / 86400000);
+  if (days === 0) return "today";
+  if (days === 1) return "1 day ago";
+  return `${days} days ago`;
+}
+
+function visitType(reason?: string) {
+  const r = (reason || "").toLowerCase();
+  if (r.includes("follow")) return "Follow Up";
+  return "Consultation";
+}
+
 export function AppointmentsPage() {
   const navigate = useNavigate();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -88,9 +102,9 @@ export function AppointmentsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [shareSuccess, setShareSuccess] = useState("");
   const [shareError, setShareError] = useState("");
+  const [loadError, setLoadError] = useState("");
   const [showTodayOnly, setShowTodayOnly] = useState(true);
   const [shareModal, setShareModal] = useState<{ aptId: number; patientName: string } | null>(null);
 
@@ -105,18 +119,17 @@ export function AppointmentsPage() {
   }, [shareSuccess, shareError]);
 
   const fetchAppointments = () => {
-    const params = new URLSearchParams();
-    if (statusFilter) params.set("status", statusFilter);
-    params.set("limit", "100");
+    setLoadError("");
     api
-      .get<Appointment[]>(`/appointments/?${params.toString()}`)
+      .get<Appointment[]>(`/appointments/?limit=100`)
       .then(setAppointments)
+      .catch((err) => setLoadError(err instanceof Error ? err.message : "Failed to load appointments"))
       .finally(() => setLoading(false));
   };
 
   useEffect(() => {
     fetchAppointments();
-  }, [statusFilter]);
+  }, []);
 
   const filtered = useMemo(
     () => {
@@ -129,19 +142,49 @@ export function AppointmentsPage() {
       if (showTodayOnly) {
         list = list.filter((a) => isToday(a.scheduled_at));
       }
+      if (statusFilter) {
+        list = list.filter((a) => a.status === statusFilter);
+      }
       return list;
     },
-    [appointments, searchQuery, showTodayOnly],
+    [appointments, searchQuery, showTodayOnly, statusFilter],
   );
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const todayBooked = appointments.filter((a) => isToday(a.scheduled_at)).length;
+  const checkedInCount = appointments.filter((a) => isToday(a.scheduled_at) && a.status === "checked_in").length;
+  const inProgressCount = appointments.filter((a) => isToday(a.scheduled_at) && a.status === "in_progress").length;
   const completedCount = appointments.filter((a) => {
     if (a.status !== "completed") return false;
     return isToday(a.scheduled_at);
   }).length;
+
+  const quickSearchPatients = useMemo(() => {
+    if (!searchQuery.trim()) return [] as Array<{ id: number; name: string; avatar: string; lastVisit: string; type: string }>;
+    const q = searchQuery.toLowerCase();
+    const byPatient = new Map<number, Appointment[]>();
+    for (const a of appointments) {
+      if (!byPatient.has(a.patient_id)) byPatient.set(a.patient_id, []);
+      byPatient.get(a.patient_id)!.push(a);
+    }
+    const out: Array<{ id: number; name: string; avatar: string; lastVisit: string; type: string }> = [];
+    byPatient.forEach((list, pid) => {
+      const sorted = [...list].sort((a, b) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime());
+      const latest = sorted[0];
+      const name = latest.patient_name || `Patient #${pid}`;
+      if (!name.toLowerCase().includes(q)) return;
+      out.push({
+        id: pid,
+        name,
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=E8F0FE&color=0F4C81&size=64`,
+        lastVisit: timeAgo(latest.scheduled_at),
+        type: visitType(latest.reason),
+      });
+    });
+    return out.slice(0, 8);
+  }, [appointments, searchQuery]);
 
   const handleStatusChange = async (aptId: number, newStatus: string) => {
     try {
@@ -178,27 +221,6 @@ export function AppointmentsPage() {
     setShareError("");
   };
 
-  const toggleSelect = (id: number) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
-  const toggleSelectAll = () => {
-    if (selectedIds.size === paginated.length) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(paginated.map((a) => a.id)));
-    }
-  };
-
-  const handleRemoveFilter = (filter: string) => {
-    if (filter === "status") setStatusFilter("");
-  };
-
   const getPageNumbers = () => {
     const pages: (number | "...")[] = [];
     if (totalPages <= 5) {
@@ -215,12 +237,6 @@ export function AppointmentsPage() {
     return pages;
   };
 
-  const activeFilters: { key: string; label: string }[] = [];
-  if (statusFilter) {
-    const opt = statusOptions.find((o) => o.value === statusFilter);
-    if (opt) activeFilters.push({ key: "status", label: opt.label });
-  }
-
   return (
     <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -231,10 +247,6 @@ export function AppointmentsPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="gap-2 rounded-lg h-10 border-border">
-            <Download className="h-4 w-4" />
-            Export List
-          </Button>
           <Button onClick={() => navigate("/appointments/new")} className="gap-2 rounded-lg h-10 shadow-sm">
             <Plus className="h-4 w-4" />
             New Appointment
@@ -254,7 +266,11 @@ export function AppointmentsPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      {loadError && (
+        <div className="p-3 text-sm bg-red-50 text-red-600 rounded-lg border border-red-100">{loadError}</div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
         <Card className="border-border shadow-sm rounded-xl">
           <CardContent className="p-5">
             <div className="flex justify-between items-start mb-3">
@@ -278,6 +294,30 @@ export function AppointmentsPage() {
             <p className="text-2xl font-bold text-foreground mt-1">{completedCount}</p>
           </CardContent>
         </Card>
+
+        <Card className="border-border shadow-sm rounded-xl">
+          <CardContent className="p-5">
+            <div className="flex justify-between items-start mb-3">
+              <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
+                <CalendarCheck className="h-5 w-5" />
+              </div>
+            </div>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Checked In</p>
+            <p className="text-2xl font-bold text-foreground mt-1">{checkedInCount}</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border shadow-sm rounded-xl">
+          <CardContent className="p-5">
+            <div className="flex justify-between items-start mb-3">
+              <div className="p-2 bg-purple-50 rounded-lg text-purple-600">
+                <CalendarCheck className="h-5 w-5" />
+              </div>
+            </div>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">In Progress</p>
+            <p className="text-2xl font-bold text-foreground mt-1">{inProgressCount}</p>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="bg-white border border-border rounded-xl shadow-sm overflow-hidden">
@@ -294,6 +334,29 @@ export function AppointmentsPage() {
                 }}
                 className="pl-10 h-10 bg-surface border-border rounded-lg"
               />
+              {quickSearchPatients.length > 0 && (
+                <div className="absolute mt-2 left-0 right-0 bg-white border border-border rounded-lg shadow-lg z-20 max-h-72 overflow-y-auto">
+                  {quickSearchPatients.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => {
+                        setSearchQuery(p.name);
+                        setPage(1);
+                      }}
+                      className="w-full text-left px-3 py-2.5 hover:bg-accent/60 transition-colors border-b border-border last:border-b-0"
+                    >
+                      <div className="flex items-center gap-3">
+                        <img src={p.avatar} alt={p.name} className="w-8 h-8 rounded-full border border-border object-cover" />
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">{p.name}</p>
+                          <p className="text-xs text-muted-foreground">Last visit {p.lastVisit} · {p.type}</p>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -336,10 +399,6 @@ export function AppointmentsPage() {
                   );
                 })}
             </select>
-            <div className="h-5 w-px bg-border" />
-            <span className="text-xs text-muted-foreground">Batch Actions:</span>
-            <Button variant="outline" size="sm" disabled className="rounded-lg border-border">Reschedule</Button>
-            <Button variant="outline" size="sm" disabled className="rounded-lg border-border">Message</Button>
           </div>
         </div>
 
@@ -361,7 +420,7 @@ export function AppointmentsPage() {
                 <tr className="bg-surface border-b border-border">
                   <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider w-10">#</th>
                   <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Patient Name</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Appointment Date</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Appointment Time</th>
                   <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-center">Status</th>
                   <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-right">Actions</th>
                 </tr>

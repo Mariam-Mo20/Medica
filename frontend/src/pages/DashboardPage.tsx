@@ -56,6 +56,7 @@ export function DashboardPage() {
   const { user } = useAuthStore();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentAppointments, setRecentAppointments] = useState<Appointment[]>([]);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     Promise.all([
@@ -64,6 +65,8 @@ export function DashboardPage() {
     ]).then(([dashboardStats, appointments]) => {
       setStats(dashboardStats);
       setRecentAppointments(appointments);
+    }).catch((err) => {
+      setError(err instanceof Error ? err.message : "Failed to load dashboard data");
     });
   }, []);
 
@@ -101,7 +104,21 @@ export function DashboardPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      {error && <div className="p-3 text-sm bg-red-50 text-red-600 rounded-lg border border-red-100">{error}</div>}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+        <Card className="border-border shadow-sm rounded-xl">
+          <CardContent className="p-5">
+            <div className="flex justify-between items-start mb-3">
+              <div className="p-2.5 bg-blue-50 text-blue-700 rounded-lg">
+                <Users className="h-5 w-5" />
+              </div>
+            </div>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Today Total Patients</p>
+            <p className="text-2xl font-bold text-foreground mt-1">{stats.patients_today}</p>
+          </CardContent>
+        </Card>
+
         <Card className="border-border shadow-sm rounded-xl">
           <CardContent className="p-5">
             <div className="flex justify-between items-start mb-3">
@@ -120,7 +137,7 @@ export function DashboardPage() {
               <div className="p-2.5 bg-primary-container text-primary rounded-lg">
                 <CalendarCheck className="h-5 w-5" />
               </div>
-              <span className="text-xs font-medium text-muted-foreground">{stats.completed_appointments} completed</span>
+              <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-full">{stats.completed_appointments} completed</span>
             </div>
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Today's Appointments</p>
             <p className="text-2xl font-bold text-foreground mt-1">
@@ -143,7 +160,7 @@ export function DashboardPage() {
               </div>
               <button
                 onClick={() => navigate("/appointments?status=scheduled")}
-                className="text-xs font-medium text-primary hover:underline"
+                className="text-xs font-semibold text-primary bg-primary-container px-2 py-1 rounded-full hover:opacity-90"
               >
                 View List
               </button>

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Calendar, Phone, FileText, Pill, Save, Plus, Trash2, Stethoscope, AlertCircle, MoreHorizontal } from "lucide-react";
+import { ArrowLeft, Calendar, Phone, FileText, Pill, Save, Plus, Trash2, Stethoscope, AlertCircle } from "lucide-react";
 
 interface PrescriptionForm {
   medication_name: string;
@@ -135,10 +135,6 @@ export function PatientDetailPage() {
               <Plus className="h-4 w-4" />
               Add Visit
             </Button>
-            <Button variant="outline" className="rounded-lg border-border gap-2">
-              More Actions
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
           </div>
         </div>
       </header>
@@ -249,12 +245,7 @@ export function PatientDetailPage() {
         <section className="flex-1 min-w-0">
           <div className="flex justify-between items-center mb-5">
             <h3 className="text-lg font-bold text-foreground">Medical History</h3>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" className="rounded-lg border-border text-xs gap-1.5">
-                <FileText className="h-3.5 w-3.5" />
-                Export
-              </Button>
-            </div>
+            <div />
           </div>
 
           {showConsultForm && (

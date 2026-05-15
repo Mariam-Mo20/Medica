@@ -46,11 +46,7 @@ export function SignupPage() {
         invitation_token: urlToken || "",
       }));
 
-      if (urlToken) {
-        navigate("/signup/role");
-      } else {
-        navigate("/signup/clinic");
-      }
+      navigate("/signup/role");
     } catch {
       setError("Could not connect to server. Please try again.");
     } finally {

@@ -7,7 +7,7 @@ class AppointmentCreate(BaseModel):
     doctor_id: int | None = None
     scheduled_at: datetime
     duration_minutes: int = 30
-    reason: str | None = None
+    reason: str
     recurring_rule: str | None = None
     recurring_end_date: datetime | None = None
 

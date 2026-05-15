@@ -31,9 +31,12 @@ export function ClinicPage() {
         phone: data.phone || null,
         clinic_name: clinicName,
       };
-      await api.post("/auth/register", body);
+      const reg = await api.post<{ access_token: string; refresh_token: string }>("/auth/register", body);
+      localStorage.setItem("access_token", reg.access_token);
+      localStorage.setItem("refresh_token", reg.refresh_token);
       sessionStorage.removeItem("signup_data");
-      navigate("/login");
+      sessionStorage.removeItem("signup_role");
+      navigate("/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed");
     } finally {

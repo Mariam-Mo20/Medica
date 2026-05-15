@@ -5,25 +5,17 @@ import { Patient } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
 import { DateInput } from "@/components/ui/date-input";
 import { parseDateToISO } from "@/lib/date";
+import { splitFullName } from "@/lib/name";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Save } from "lucide-react";
-
-const genderOptions = [
-  { value: "male", label: "Male" },
-  { value: "female", label: "Female" },
-  { value: "other", label: "Other" },
-];
 
 export function PatientFormPage() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
-    first_name: "",
-    last_name: "",
+    full_name: "",
     date_of_birth: "",
-    gender: "",
     phone: "",
     email: "",
     address: "",
@@ -39,12 +31,13 @@ export function PatientFormPage() {
       if (!form.date_of_birth) throw new Error("Date of birth is required");
       const dob = parseDateToISO(form.date_of_birth);
       if (!dob) throw new Error("Invalid date of birth format. Use dd/mm/yyyy");
+      const { firstName, lastName } = splitFullName(form.full_name);
+      if (!firstName || !lastName || lastName === "-") throw new Error("Please enter full name (first and last)");
       const payload: Record<string, unknown> = {
-        first_name: form.first_name,
-        last_name: form.last_name,
+        first_name: firstName,
+        last_name: lastName,
         date_of_birth: dob,
       };
-      if (form.gender) payload.gender = form.gender;
       if (form.phone) payload.phone = form.phone;
       if (form.email) payload.email = form.email;
       if (form.address) payload.address = form.address;
@@ -78,36 +71,18 @@ export function PatientFormPage() {
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="first_name">First Name *</Label>
+                <Label htmlFor="full_name">Full Name *</Label>
                 <Input
-                  id="first_name"
-                  value={form.first_name}
-                  onChange={(e) => setForm({ ...form, first_name: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="last_name">Last Name *</Label>
-                <Input
-                  id="last_name"
-                  value={form.last_name}
-                  onChange={(e) => setForm({ ...form, last_name: e.target.value })}
+                  id="full_name"
+                  value={form.full_name}
+                  onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+                  placeholder="e.g. Ali Hassan"
                   required
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="dob">Date of Birth *</Label>
                 <DateInput value={form.date_of_birth} onChange={(v) => setForm({ ...form, date_of_birth: v })} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="gender">Gender</Label>
-                <Select
-                  id="gender"
-                  options={genderOptions}
-                  placeholder="Select gender"
-                  value={form.gender}
-                  onChange={(e) => setForm({ ...form, gender: e.target.value })}
-                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone</Label>

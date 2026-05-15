@@ -17,6 +17,7 @@ import {
   BellDot,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getDisplayInitial } from "@/lib/name";
 
 const navItems = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["doctor", "assistant"] },
@@ -219,7 +220,7 @@ export function Layout() {
                 <p className="text-[11px] text-muted-foreground mt-0.5 capitalize">{user?.role}</p>
               </div>
               <div className="w-9 h-9 rounded-full bg-primary-container flex items-center justify-center text-primary font-bold text-sm">
-                {user?.full_name?.charAt(0)?.toUpperCase() || "U"}
+                {getDisplayInitial(user?.full_name || "")}
               </div>
             </div>
           </div>

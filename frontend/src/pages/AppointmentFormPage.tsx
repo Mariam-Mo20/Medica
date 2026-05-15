@@ -8,14 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { DateInput } from "@/components/ui/date-input";
 import { parseDateToISO } from "@/lib/date";
+import { splitFullName } from "@/lib/name";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle, Save, Search, UserPlus, ArrowLeft, Loader2 } from "lucide-react";
-
-const genderOptions = [
-  { value: "male", label: "Male" },
-  { value: "female", label: "Female" },
-  { value: "other", label: "Other" },
-];
 
 const reasonOptions = [
   { value: "Consultation", label: "Consultation" },
@@ -37,7 +32,7 @@ export function AppointmentFormPage() {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [showNewPatient, setShowNewPatient] = useState(false);
   const [newPatient, setNewPatient] = useState({
-    first_name: "", last_name: "", date_of_birth: "", gender: "", phone: "", email: "",
+    full_name: "", date_of_birth: "", phone: "", email: "",
   });
   const today = new Date();
   const dd = String(today.getDate()).padStart(2, "0");
@@ -88,8 +83,8 @@ export function AppointmentFormPage() {
       if (selectedPatient) {
         patientId = selectedPatient.id;
       } else if (showNewPatient) {
-        if (!newPatient.first_name || !newPatient.last_name) {
-          throw new Error("Patient first and last name are required");
+        if (!newPatient.full_name.trim()) {
+          throw new Error("Patient full name is required");
         }
         if (!newPatient.date_of_birth) {
           throw new Error("Patient date of birth is required");
@@ -98,12 +93,15 @@ export function AppointmentFormPage() {
         if (!dob) {
           throw new Error("Invalid date of birth format. Use dd/mm/yyyy");
         }
+        const { firstName, lastName } = splitFullName(newPatient.full_name);
+        if (!firstName || !lastName || lastName === "-") {
+          throw new Error("Please enter full name (first and last)");
+        }
         const patientPayload: Record<string, unknown> = {
-          first_name: newPatient.first_name,
-          last_name: newPatient.last_name,
+          first_name: firstName,
+          last_name: lastName,
           date_of_birth: dob,
         };
-        if (newPatient.gender) patientPayload.gender = newPatient.gender;
         if (newPatient.phone) patientPayload.phone = newPatient.phone;
         if (newPatient.email) patientPayload.email = newPatient.email;
         const created = await api.post<Patient>("/patients/", patientPayload);
@@ -113,6 +111,7 @@ export function AppointmentFormPage() {
       }
 
       if (!form.scheduled_at) throw new Error("Date is required");
+      if (!form.reason) throw new Error("Reason of visit is required");
       const isoDate = parseDateToISO(form.scheduled_at);
       if (!isoDate) throw new Error("Invalid date format. Use dd/mm/yyyy");
 
@@ -123,8 +122,8 @@ export function AppointmentFormPage() {
         patient_id: patientId,
         scheduled_at: scheduledAt.toISOString(),
         duration_minutes: parseInt(form.duration_minutes) || 30,
+        reason: form.reason,
       };
-      if (form.reason) payload.reason = form.reason;
 
       await api.post<Appointment>("/appointments/", payload);
       navigate("/appointments");
@@ -176,21 +175,13 @@ export function AppointmentFormPage() {
                     </Button>
                   </div>
                   <div className="grid gap-3 md:grid-cols-2">
-                    <div className="space-y-1">
-                      <Label className="text-xs">First Name *</Label>
-                      <Input className="h-8 text-sm bg-white" value={newPatient.first_name} onChange={(e) => setNewPatient({ ...newPatient, first_name: e.target.value })} required />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs">Last Name *</Label>
-                      <Input className="h-8 text-sm bg-white" value={newPatient.last_name} onChange={(e) => setNewPatient({ ...newPatient, last_name: e.target.value })} required />
+                    <div className="space-y-1 md:col-span-2">
+                      <Label className="text-xs">Full Name *</Label>
+                      <Input className="h-8 text-sm bg-white" value={newPatient.full_name} onChange={(e) => setNewPatient({ ...newPatient, full_name: e.target.value })} required />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Date of Birth *</Label>
                       <DateInput className="h-8 text-sm bg-white" value={newPatient.date_of_birth} onChange={(v) => setNewPatient({ ...newPatient, date_of_birth: v })} />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs">Gender</Label>
-                      <Select options={genderOptions} className="bg-white" placeholder="Select" value={newPatient.gender} onChange={(e) => setNewPatient({ ...newPatient, gender: e.target.value })} />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Phone</Label>
@@ -261,11 +252,11 @@ export function AppointmentFormPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="reason">Reason for Visit</Label>
+              <Label htmlFor="reason">Reason of Visit *</Label>
               <Select
                 id="reason"
                 options={reasonOptions}
-                placeholder="Select (optional)"
+                placeholder="Select reason"
                 value={form.reason}
                 onChange={(e) => setForm({ ...form, reason: e.target.value })}
               />

@@ -15,10 +15,15 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
-    CORS_ORIGINS: List[str] = ["http://localhost:5173", "http://localhost:5174", "http://localhost:3000"]
+    CORS_ORIGINS: List[str] = [
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://localhost:3000",
+        "https://frontend-neon-eta-yhbfdcoe8c.vercel.app",
+    ]
 
     RESEND_API_KEY: str = ""
-    FRONTEND_URL: str = "http://localhost:5173"
+    FRONTEND_URL: str = "https://frontend-neon-eta-yhbfdcoe8c.vercel.app"
 
     DEFAULT_ADMIN_EMAIL: str = "admin@medica.com"
     DEFAULT_ADMIN_PASSWORD: str = "admin123"

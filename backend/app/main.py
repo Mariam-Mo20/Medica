@@ -19,6 +19,9 @@ async def lifespan(app: FastAPI):
                 inspector = inspect(conn_sync)
                 if "notifications" in inspector.get_table_names():
                     cols = {c["name"] for c in inspector.get_columns("notifications")}
+                    # Drop old receiver_id column if it exists (was renamed to recipient_id)
+                    if "receiver_id" in cols:
+                        conn_sync.execute(text("ALTER TABLE notifications DROP COLUMN receiver_id"))
                     missing = []
                     for col, dtype in [
                         ("recipient_id", "INTEGER REFERENCES users(id)"),

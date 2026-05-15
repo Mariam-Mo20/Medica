@@ -10,6 +10,7 @@ from app.middleware.auth_middleware import get_current_user
 from app.middleware.tenant_middleware import get_current_tenant
 from app.models.tenant import Tenant
 from app.models.user import User
+from app.models.doctor import Doctor
 from app.models.invitation import Invitation
 from app.schemas.auth import LoginRequest, RegisterRequest, TokenResponse, RefreshRequest, AuthUser, MeResponse
 
@@ -71,6 +72,15 @@ async def register(data: RegisterRequest, db: AsyncSession = Depends(get_db)):
     )
     db.add(user)
     await db.flush()
+
+    if role == "doctor":
+        doctor = Doctor(
+            tenant_id=tenant_id,
+            user_id=user.id,
+            specialization="General Practice",
+        )
+        db.add(doctor)
+        await db.flush()
 
     if data.invitation_token and invitation:
         invitation.status = "accepted"

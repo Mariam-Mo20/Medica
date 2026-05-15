@@ -38,6 +38,15 @@ async def lifespan(app: FastAPI):
                         if col not in cols:
                             conn_sync.execute(text(f"ALTER TABLE notifications ADD COLUMN {col} {dtype}"))
             await conn.run_sync(migrate)
+            def migrate_medical(conn_sync):
+                inspector = inspect(conn_sync)
+                if "medical_records" in inspector.get_table_names():
+                    cols = {c["name"] for c in inspector.get_columns("medical_records")}
+                    if "doctor_id" in cols:
+                        col_info = [c for c in inspector.get_columns("medical_records") if c["name"] == "doctor_id"][0]
+                        if not col_info.get("nullable", True):
+                            conn_sync.execute(text("ALTER TABLE medical_records ALTER COLUMN doctor_id DROP NOT NULL"))
+            await conn.run_sync(migrate_medical)
     except Exception:
         pass
 

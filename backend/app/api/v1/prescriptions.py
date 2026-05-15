@@ -57,7 +57,8 @@ async def add_prescriptions(
     result = []
     for p in created:
         resp = PrescriptionResponse.model_validate(p)
-        resp.doctor_name = current_user.full_name
+        if doctor:
+            resp.doctor_name = current_user.full_name
         result.append(resp)
     return result
 

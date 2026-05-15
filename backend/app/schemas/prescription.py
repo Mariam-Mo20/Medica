@@ -14,7 +14,7 @@ class PrescriptionResponse(BaseModel):
     id: int
     tenant_id: int
     medical_record_id: int
-    doctor_id: int
+    doctor_id: int | None = None
     medication_name: str
     dosage: str
     frequency: str

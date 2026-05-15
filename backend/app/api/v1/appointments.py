@@ -1,12 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 from app.core.database import get_db
 from app.middleware.auth_middleware import get_current_user, require_role
 from app.middleware.tenant_middleware import get_current_tenant
 from app.models.tenant import Tenant
 from app.models.user import User
 from app.models.appointment import Appointment
+from app.models.doctor import Doctor
 from app.schemas.appointment import AppointmentCreate, AppointmentUpdate, AppointmentResponse, AppointmentStatusUpdate
 from app.services.appointment_service import check_conflict, generate_series_instances, appointment_to_response
 
@@ -62,7 +64,11 @@ async def list_appointments(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
 ):
-    query = select(Appointment).where(Appointment.tenant_id == tenant.id)
+    query = (
+        select(Appointment)
+        .options(joinedload(Appointment.patient), joinedload(Appointment.doctor).joinedload(Doctor.user))
+        .where(Appointment.tenant_id == tenant.id)
+    )
 
     if status:
         query = query.where(Appointment.status == status)
@@ -90,7 +96,9 @@ async def get_appointment(
     tenant: Tenant = Depends(get_current_tenant),
 ):
     result = await db.execute(
-        select(Appointment).where(Appointment.id == appointment_id, Appointment.tenant_id == tenant.id)
+        select(Appointment)
+        .options(joinedload(Appointment.patient), joinedload(Appointment.doctor).joinedload(Doctor.user))
+        .where(Appointment.id == appointment_id, Appointment.tenant_id == tenant.id)
     )
     appointment = result.scalar_one_or_none()
     if not appointment:
@@ -107,7 +115,9 @@ async def update_appointment(
     tenant: Tenant = Depends(get_current_tenant),
 ):
     result = await db.execute(
-        select(Appointment).where(Appointment.id == appointment_id, Appointment.tenant_id == tenant.id)
+        select(Appointment)
+        .options(joinedload(Appointment.patient), joinedload(Appointment.doctor).joinedload(Doctor.user))
+        .where(Appointment.id == appointment_id, Appointment.tenant_id == tenant.id)
     )
     appointment = result.scalar_one_or_none()
     if not appointment:

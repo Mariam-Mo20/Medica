@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
-import { Appointment, DashboardStats } from "@/types";
+import { DashboardStats } from "@/types";
 import { useAuthStore } from "@/store/authStore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -55,16 +55,13 @@ export function DashboardPage() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [recentAppointments, setRecentAppointments] = useState<Appointment[]>([]);
+  const [recentAppointments, setRecentAppointments] = useState<Array<Record<string, unknown>>>([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    Promise.all([
-      api.get<DashboardStats>("/dashboard/"),
-      api.get<Appointment[]>("/appointments/?limit=100"),
-    ]).then(([dashboardStats, appointments]) => {
+    api.get<DashboardStats>("/dashboard/").then((dashboardStats) => {
       setStats(dashboardStats);
-      setRecentAppointments(appointments);
+      setRecentAppointments(dashboardStats.recent_appointments || []);
     }).catch((err) => {
       setError(err instanceof Error ? err.message : "Failed to load dashboard data");
     });
@@ -77,14 +74,9 @@ export function DashboardPage() {
     return <StatsSkeleton />;
   }
 
-  const statusCounts = recentAppointments.reduce<Record<string, number>>((acc, apt) => {
-    acc[apt.status] = (acc[apt.status] || 0) + 1;
-    return acc;
-  }, {});
-
-  const chartData = Object.entries(statusCounts).map(([status, count]) => ({
-    name: status.replace("_", " ").replace(/\b\w/g, (c) => c.toUpperCase()),
-    count,
+  const chartData = (stats.appointments_by_status || []).map((row) => ({
+    name: row.status.replace("_", " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+    count: row.count,
   }));
 
   const completionRate = stats.today_appointments
@@ -230,17 +222,19 @@ export function DashboardPage() {
                  </div>
                ) : (
                 recentAppointments.slice(0, 5).map((apt) => {
-                  const name = apt.patient_name || `Patient #${apt.patient_id}`;
-                  const initials = getInitials(apt.patient_name || "");
-                  const time = apt.scheduled_at
-                    ? new Date(apt.scheduled_at).toLocaleTimeString([], {
+                  const patientId = Number(apt.patient_id || 0);
+                  const name = `Patient #${patientId || "-"}`;
+                  const scheduledAt = String(apt.scheduled_at || "");
+                  const status = String(apt.status || "scheduled");
+                  const time = scheduledAt
+                    ? new Date(scheduledAt).toLocaleTimeString([], {
                         hour: "2-digit",
                         minute: "2-digit",
                       })
                     : "—";
 
                   return (
-                    <div key={apt.id} className="flex items-center justify-between px-5 py-3 hover:bg-accent/50 transition-colors">
+                    <div key={String(apt.id)} className="flex items-center justify-between px-5 py-3 hover:bg-accent/50 transition-colors">
                       <div className="flex items-center gap-3 min-w-0">
                         <img
                           src={`https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=E8F0FE&color=0F4C81&size=64`}
@@ -249,15 +243,15 @@ export function DashboardPage() {
                         />
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-foreground truncate">{name}</p>
-                          <p className="text-xs text-muted-foreground">{time} · {apt.reason || "General"}</p>
+                          <p className="text-xs text-muted-foreground">{time} · General</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusStyles[apt.status] || "bg-gray-100 text-gray-500"}`}
-                        >
-                          {statusLabels[apt.status] || apt.status}
-                        </span>
+                           className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusStyles[status] || "bg-gray-100 text-gray-500"}`}
+                         >
+                           {statusLabels[status] || status}
+                         </span>
                         <button className="text-muted-foreground hover:text-foreground transition-colors p-1">
                           <MoreVertical className="h-4 w-4" />
                         </button>

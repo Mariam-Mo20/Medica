@@ -121,7 +121,7 @@ export function AppointmentsPage() {
   const fetchAppointments = () => {
     setLoadError("");
     api
-      .get<Appointment[]>(`/appointments/?limit=100`)
+      .get<Appointment[]>(`/appointments/?limit=60`)
       .then(setAppointments)
       .catch((err) => setLoadError(err instanceof Error ? err.message : "Failed to load appointments"))
       .finally(() => setLoading(false));

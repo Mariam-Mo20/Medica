@@ -144,6 +144,7 @@ async def share_appointment_patient(
         db.add(notification)
         count += 1
 
+    appointment.status = "in_progress"
     await db.flush()
     return ShareResponse(
         message=f"Patient shared with {count} doctor{'s' if count != 1 else ''}",

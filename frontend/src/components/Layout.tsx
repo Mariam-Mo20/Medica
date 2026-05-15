@@ -194,7 +194,7 @@ export function Layout() {
           <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 w-full max-w-[600px] px-4">
             <div className="bg-slate-800 text-white shadow-2xl rounded-xl flex items-center justify-between gap-4 border border-white/10 py-4 px-6">
               <div className="flex items-center gap-4 min-w-0">
-                <div className="w-10 h-10 rounded-full bg-primary-container text-primary flex items-center justify-center font-bold text-sm shrink-0">
+                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-white font-bold text-sm shrink-0 ring-2 ring-white/20">
                   {toastNotification.title?.charAt(0) || "?"}
                 </div>
                 <div className="min-w-0">

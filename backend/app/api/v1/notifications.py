@@ -114,6 +114,7 @@ async def share_appointment_patient(
         raise HTTPException(status_code=404, detail="Patient not found")
 
     patient_name = f"{patient.first_name} {patient.last_name}"
+    visit_reason = appointment.reason or "Medical Visit"
 
     doctor_users_result = await db.execute(
         select(User).join(Doctor, Doctor.user_id == User.id).where(
@@ -135,8 +136,8 @@ async def share_appointment_patient(
             recipient_id=doctor_user.id,
             sender_id=current_user.id,
             notification_type="patient_shared",
-            title=f"Patient Shared: {patient_name}",
-            message=f"{current_user.full_name} shared patient {patient_name} with you.",
+            title=f"{patient_name} it is waiting",
+            message=visit_reason,
             resource_type="patient",
             resource_id=patient.id,
         )

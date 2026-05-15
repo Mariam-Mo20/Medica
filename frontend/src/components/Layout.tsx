@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
 import { api } from "@/lib/api";
@@ -30,17 +30,19 @@ export function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
   const [toastNotification, setToastNotification] = useState<Notification | null>(null);
-  const [dismissedIds, setDismissedIds] = useState<Set<number>>(new Set());
+  const [unreadCount, setUnreadCount] = useState(0);
+  const lastShownId = useRef<number | null>(null);
+  const dismissedIds = useRef<Set<number>>(new Set());
 
   const fetchNotifications = () => {
     api.get<NotificationList>("/notifications/").then((data) => {
-      setNotifications(data.notifications);
       setUnreadCount(data.unread_count);
-      const unread = data.notifications.find((n) => !n.is_read && !dismissedIds.has(n.id));
-      if (unread && !toastNotification) {
+      const unread = data.notifications.find(
+        (n) => !n.is_read && !dismissedIds.current.has(n.id) && n.id !== lastShownId.current,
+      );
+      if (unread) {
+        lastShownId.current = unread.id;
         setToastNotification(unread);
       }
     }).catch(() => {});
@@ -65,7 +67,7 @@ export function Layout() {
 
   const handleDismissToast = () => {
     if (toastNotification) {
-      setDismissedIds((prev) => new Set(prev).add(toastNotification.id));
+      dismissedIds.current.add(toastNotification.id);
       setToastNotification(null);
     }
   };

@@ -20,17 +20,16 @@ router = APIRouter()
 async def create_medical_record(
     data: MedicalRecordCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role("doctor")),
+    current_user: User = Depends(require_role("doctor", "assistant")),
     tenant: Tenant = Depends(get_current_tenant),
 ):
     doctor_result = await db.execute(
         select(Doctor).where(Doctor.user_id == current_user.id, Doctor.tenant_id == tenant.id)
     )
     doctor = doctor_result.scalar_one_or_none()
-    if not doctor:
-        raise HTTPException(status_code=403, detail="Doctor profile not found")
 
     patient_id: int | None = None
+    doctor_id: int | None = None
     if data.appointment_id:
         appt_result = await db.execute(
             select(Appointment).options(joinedload(Appointment.patient)).where(
@@ -43,16 +42,20 @@ async def create_medical_record(
             raise HTTPException(status_code=404, detail="Appointment not found")
         patient_id = appointment.patient_id
         appointment.status = "completed"
+        doctor_id = appointment.doctor_id or (doctor.id if doctor else None)
     elif data.patient_id:
         patient_id = data.patient_id
     else:
         raise HTTPException(status_code=400, detail="Either appointment_id or patient_id is required")
 
+    if not doctor_id:
+        doctor_id = doctor.id if doctor else None
+
     record = MedicalRecord(
         tenant_id=tenant.id,
         patient_id=patient_id,
         appointment_id=data.appointment_id,
-        doctor_id=doctor.id,
+        doctor_id=doctor_id,
         diagnosis=data.diagnosis,
         symptoms=data.symptoms,
         visit_notes=data.visit_notes,

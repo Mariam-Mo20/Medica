@@ -20,28 +20,29 @@ async def add_prescriptions(
     record_id: int,
     prescriptions: list[PrescriptionCreate],
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role("doctor")),
+    current_user: User = Depends(require_role("doctor", "assistant")),
     tenant: Tenant = Depends(get_current_tenant),
 ):
     doctor_result = await db.execute(
         select(Doctor).where(Doctor.user_id == current_user.id, Doctor.tenant_id == tenant.id)
     )
     doctor = doctor_result.scalar_one_or_none()
-    if not doctor:
-        raise HTTPException(status_code=403, detail="Doctor profile not found")
 
     record_result = await db.execute(
         select(MedicalRecord).where(MedicalRecord.id == record_id, MedicalRecord.tenant_id == tenant.id)
     )
-    if not record_result.scalar_one_or_none():
+    record = record_result.scalar_one_or_none()
+    if not record:
         raise HTTPException(status_code=404, detail="Medical record not found")
+
+    doctor_id = doctor.id if doctor else record.doctor_id
 
     created = []
     for p in prescriptions:
         prescription = Prescription(
             tenant_id=tenant.id,
             medical_record_id=record_id,
-            doctor_id=doctor.id,
+            doctor_id=doctor_id,
             medication_name=p.medication_name,
             dosage=p.dosage,
             frequency=p.frequency,

@@ -34,28 +34,14 @@ export function Layout() {
   const [unreadCount, setUnreadCount] = useState(0);
   const lastProcessedId = useRef<number | null>(null);
 
-  const getDismissed = (): number[] => {
-    try { return JSON.parse(localStorage.getItem("dismissed_notifications") || "[]"); } catch { return []; }
-  };
-
-  const addDismissed = (id: number) => {
-    const ids = getDismissed();
-    if (!ids.includes(id)) {
-      ids.push(id);
-      localStorage.setItem("dismissed_notifications", JSON.stringify(ids));
-    }
-  };
-
   const fetchNotifications = () => {
     api.get<NotificationList>("/notifications/").then((data) => {
       setUnreadCount(data.unread_count);
-      const dismissed = getDismissed();
-      const unread = data.notifications.find(
-        (n) => !n.is_read && !dismissed.includes(n.id) && n.id !== lastProcessedId.current,
-      );
-      if (unread) {
-        lastProcessedId.current = unread.id;
-        setToastNotification(unread);
+      const unread = data.notifications.filter((n) => !n.is_read);
+      const newUnread = unread.find((n) => n.id !== lastProcessedId.current);
+      if (newUnread) {
+        lastProcessedId.current = newUnread.id;
+        setToastNotification(newUnread);
       }
     }).catch(() => {});
   };
@@ -72,7 +58,6 @@ export function Layout() {
       setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch {}
     lastProcessedId.current = notification.id;
-    addDismissed(notification.id);
     setToastNotification(null);
     if (notification.resource_type === "patient" && notification.resource_id) {
       navigate(`/patients/${notification.resource_id}`);
@@ -81,14 +66,15 @@ export function Layout() {
 
   const handleDismissToast = () => {
     if (toastNotification) {
-      lastProcessedId.current = toastNotification.id;
-      addDismissed(toastNotification.id);
+      const n = toastNotification;
+      lastProcessedId.current = n.id;
       setToastNotification(null);
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+      api.patch(`/notifications/${n.id}/read`).catch(() => {});
     }
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("dismissed_notifications");
     logout();
     navigate("/login");
   };

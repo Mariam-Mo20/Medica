@@ -86,7 +86,7 @@ async def list_appointments(
             Patient.last_name,
             User.full_name.label("doctor_name"),
         )
-        .join(Patient, and_(Patient.id == Appointment.patient_id, Patient.tenant_id == current_user.tenant_id))
+        .outerjoin(Patient, and_(Patient.id == Appointment.patient_id, Patient.tenant_id == current_user.tenant_id))
         .outerjoin(Doctor, and_(Doctor.id == Appointment.doctor_id, Doctor.tenant_id == current_user.tenant_id))
         .outerjoin(User, User.id == Doctor.user_id)
         .where(Appointment.tenant_id == current_user.tenant_id)

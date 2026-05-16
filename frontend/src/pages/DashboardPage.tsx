@@ -128,7 +128,7 @@ export function DashboardPage() {
                 <Users className="h-5 w-5" />
               </div>
             </div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Patients</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Patients Today</p>
             <p className="text-lg lg:text-[1.1rem] font-bold text-foreground mt-1">{safeStats.patients_today}</p>
           </CardContent>
         </Card>

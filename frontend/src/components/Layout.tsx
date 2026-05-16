@@ -77,9 +77,21 @@ export function Layout() {
   };
 
   useEffect(() => {
-    fetchNotifications();
-    const interval = setInterval(fetchNotifications, 15000);
-    return () => clearInterval(interval);
+    const runFetch = () => {
+      if (document.visibilityState === "visible") {
+        fetchNotifications();
+      }
+    };
+
+    const initialDelay = window.setTimeout(runFetch, 1200);
+    const interval = setInterval(runFetch, 30000);
+    document.addEventListener("visibilitychange", runFetch);
+
+    return () => {
+      clearTimeout(initialDelay);
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", runFetch);
+    };
   }, []);
 
   useEffect(() => {

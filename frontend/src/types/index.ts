@@ -116,7 +116,6 @@ export interface DashboardStats {
   completed_appointments: number;
   cancelled_appointments: number;
   pending_appointments: number;
-  active_doctors: number;
   new_patients_today: number;
   appointments_by_status: Array<{ status: string; count: number }>;
   appointments_trend: Array<Record<string, unknown>>;
@@ -156,4 +155,3 @@ export interface NotificationList {
   notifications: Notification[];
   unread_count: number;
 }
-

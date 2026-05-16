@@ -1,5 +1,5 @@
-import { Suspense, lazy, useEffect } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Suspense, lazy, useEffect, useRef } from "react";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
 import { AuthGuard } from "@/components/AuthGuard";
 import { Layout } from "@/components/Layout";
@@ -25,10 +25,29 @@ const NotificationsPage = lazy(() => import("@/pages/NotificationsPage").then((m
 
 export default function App() {
   const { fetchMe } = useAuthStore();
+  const location = useLocation();
+  const bootstrapStartedRef = useRef(false);
 
   useEffect(() => {
+    if (localStorage.getItem("perf_debug") === "1") {
+      console.info("[perf][app] mount");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (bootstrapStartedRef.current) return;
+    bootstrapStartedRef.current = true;
+    if (localStorage.getItem("perf_debug") === "1") {
+      console.info("[perf][app] auth bootstrap start");
+    }
     fetchMe();
   }, [fetchMe]);
+
+  useEffect(() => {
+    if (localStorage.getItem("perf_debug") === "1") {
+      console.info("[perf][app] route rendered", { path: location.pathname });
+    }
+  }, [location.pathname]);
 
   return (
     <>

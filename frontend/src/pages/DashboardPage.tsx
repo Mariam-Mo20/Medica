@@ -5,7 +5,7 @@ import { DashboardStats } from "@/types";
 import { useAuthStore } from "@/store/authStore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { StatsSkeleton } from "@/components/ui/skeleton";
+import { getCachedPageData, setCachedPageData } from "@/lib/pageDataCache";
 import {
   Users,
   Calendar,
@@ -61,33 +61,49 @@ function visitType(reason?: string): string {
 export function DashboardPage() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [recentAppointments, setRecentAppointments] = useState<Array<Record<string, unknown>>>([]);
+  const [stats, setStats] = useState<DashboardStats | null>(() => getCachedPageData<DashboardStats>("dashboard:stats"));
+  const [recentAppointments, setRecentAppointments] = useState<Array<Record<string, unknown>>>(() => {
+    const cached = getCachedPageData<DashboardStats>("dashboard:stats");
+    return cached?.recent_appointments || [];
+  });
+  const [loading, setLoading] = useState(() => !stats);
   const [error, setError] = useState("");
 
   useEffect(() => {
+    if (stats) return;
+    if (!stats) setLoading(true);
     api.get<DashboardStats>("/dashboard/").then((dashboardStats) => {
       setStats(dashboardStats);
       setRecentAppointments(dashboardStats.recent_appointments || []);
+      setCachedPageData("dashboard:stats", dashboardStats, 30000);
     }).catch((err) => {
       setError(err instanceof Error ? err.message : "Failed to load dashboard data");
-    });
+    }).finally(() => setLoading(false));
   }, []);
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
 
-  if (!stats) {
-    return <StatsSkeleton />;
-  }
+  const safeStats: DashboardStats = stats || {
+    total_patients: 0,
+    patients_today: 0,
+    today_appointments: 0,
+    completed_appointments: 0,
+    cancelled_appointments: 0,
+    pending_appointments: 0,
+    new_patients_today: 0,
+    appointments_by_status: [],
+    appointments_trend: [],
+    recent_appointments: [],
+  };
 
-  const chartData = (stats.appointments_by_status || []).map((row) => ({
+  const chartData = (safeStats.appointments_by_status || []).map((row) => ({
     name: row.status.replace("_", " ").replace(/\b\w/g, (c) => c.toUpperCase()),
     count: row.count,
   }));
 
-  const completionRate = stats.today_appointments
-    ? Math.round((stats.completed_appointments / stats.today_appointments) * 100)
+  const completionRate = safeStats.today_appointments
+    ? Math.round((safeStats.completed_appointments / safeStats.today_appointments) * 100)
     : 0;
 
   return (
@@ -114,7 +130,7 @@ export function DashboardPage() {
               </div>
             </div>
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Patients</p>
-            <p className="text-lg lg:text-[1.1rem] font-bold text-foreground mt-1">{stats.patients_today}</p>
+            <p className="text-lg lg:text-[1.1rem] font-bold text-foreground mt-1">{safeStats.patients_today}</p>
           </CardContent>
         </Card>
 
@@ -126,7 +142,7 @@ export function DashboardPage() {
               </div>
             </div>
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">New Patients</p>
-            <p className="text-lg lg:text-[1.1rem] font-bold text-foreground mt-1">{stats.new_patients_today}</p>
+            <p className="text-lg lg:text-[1.1rem] font-bold text-foreground mt-1">{safeStats.new_patients_today}</p>
           </CardContent>
         </Card>
 
@@ -136,11 +152,11 @@ export function DashboardPage() {
                <div className="p-2 bg-primary-container text-primary rounded-lg">
                 <CalendarCheck className="h-5 w-5" />
               </div>
-              <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-full">{stats.completed_appointments} completed</span>
+              <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-full">{safeStats.completed_appointments} completed</span>
             </div>
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Appointments</p>
             <p className="text-lg lg:text-[1.1rem] font-bold text-foreground mt-1">
-              {stats.completed_appointments} / {stats.today_appointments}
+              {safeStats.completed_appointments} / {safeStats.today_appointments}
             </p>
             <div className="w-full bg-gray-100 h-1.5 rounded-full mt-3 overflow-hidden">
               <div
@@ -165,7 +181,7 @@ export function DashboardPage() {
               </button>
             </div>
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Completed Visits</p>
-            <p className="text-lg lg:text-[1.1rem] font-bold text-foreground mt-1">{stats.completed_appointments}</p>
+            <p className="text-lg lg:text-[1.1rem] font-bold text-foreground mt-1">{safeStats.completed_appointments}</p>
 
           </CardContent>
         </Card>
@@ -182,7 +198,9 @@ export function DashboardPage() {
                 </div>
                 <div />
               </div>
-              {chartData.length > 0 ? (
+              {loading && !stats ? (
+                <div className="animate-pulse h-[220px] rounded-lg bg-gray-100" />
+              ) : chartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={220}>
                   <BarChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />

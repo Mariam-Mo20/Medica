@@ -1,12 +1,17 @@
 from fastapi import Request, HTTPException, Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import load_only
 from app.core.database import get_db
 from app.core.security import decode_token
 from app.models.user import User
 
 
 async def get_current_user(request: Request, db: AsyncSession = Depends(get_db)) -> User:
+    cached_user: User | None = getattr(request.state, "user", None)
+    if cached_user is not None:
+        return cached_user
+
     auth_header = request.headers.get("Authorization")
     if not auth_header or not auth_header.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
@@ -17,7 +22,21 @@ async def get_current_user(request: Request, db: AsyncSession = Depends(get_db))
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
     user_id = int(payload["sub"])
-    result = await db.execute(select(User).where(User.id == user_id))
+    result = await db.execute(
+        select(User)
+        .options(
+            load_only(
+                User.id,
+                User.tenant_id,
+                User.email,
+                User.full_name,
+                User.role,
+                User.phone,
+                User.is_active,
+            )
+        )
+        .where(User.id == user_id)
+    )
     user = result.scalar_one_or_none()
 
     if not user or not user.is_active:

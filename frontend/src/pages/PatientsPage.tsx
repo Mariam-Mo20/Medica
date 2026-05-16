@@ -6,6 +6,7 @@ import { Patient } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
+import { getCachedPageData, setCachedPageData } from "@/lib/pageDataCache";
 import {
   Search,
   UserPlus,
@@ -44,28 +45,34 @@ function getAvatarColor(name: string) {
 
 export function PatientsPage() {
   const navigate = useNavigate();
-  const [patients, setPatients] = useState<Patient[]>([]);
+  const [patients, setPatients] = useState<Patient[]>(() => getCachedPageData<Patient[]>("patients:list") || []);
   const [searchTerm, setSearchTerm] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => patients.length === 0);
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
-  const [newTodayCount, setNewTodayCount] = useState(0);
+  const [newTodayCount, setNewTodayCount] = useState(() => getCachedPageData<number>("patients:newToday") || 0);
 
   useEffect(() => {
-    setLoading(true);
+    if (searchTerm.length < 2 && patients.length > 0) return;
+
+    if (patients.length === 0 || searchTerm.length >= 2) {
+      setLoading(true);
+    }
     setError("");
     const run = async () => {
       try {
-        if (searchTerm.length < 2) {
-          const dashboard = await api.get<{ new_patients_today: number }>("/dashboard/");
-          setNewTodayCount(dashboard.new_patients_today || 0);
-        }
         if (searchTerm.length >= 2) {
           const results = await api.get<Patient[]>(`/patients/search?q=${encodeURIComponent(searchTerm)}`);
           setPatients(results);
         } else {
-          const results = await api.get<Patient[]>("/patients/?limit=100");
+          const [results, dashboard] = await Promise.all([
+            api.get<Patient[]>("/patients/?limit=100"),
+            api.get<{ new_patients_today: number }>("/dashboard/"),
+          ]);
           setPatients(results);
+          setCachedPageData("patients:list", results, 30000);
+          setNewTodayCount(dashboard.new_patients_today || 0);
+          setCachedPageData("patients:newToday", dashboard.new_patients_today || 0, 30000);
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load patients");

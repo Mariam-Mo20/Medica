@@ -3,8 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuthStore();
+  const { user, isAuthenticated, isLoading } = useAuthStore();
   const navigate = useNavigate();
+  const hasToken = typeof window !== "undefined" && !!localStorage.getItem("access_token");
+  const hasCachedUser = !!user;
+  const shouldShowUnknownState = isLoading && hasToken && !hasCachedUser;
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -12,7 +15,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     }
   }, [isAuthenticated, isLoading, navigate]);
 
-  if (isLoading) {
+  if (shouldShowUnknownState) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />

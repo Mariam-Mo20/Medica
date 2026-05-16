@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Pencil, X, Check, Copy, Share2, LinkIcon } from "lucide-react";
+import { getCachedPageData, setCachedPageData } from "@/lib/pageDataCache";
 
 const roleOptions = [
   { value: "doctor", label: "Doctor" },
@@ -14,7 +15,8 @@ const roleOptions = [
 ];
 
 export function AdministrationPage() {
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<User[]>(() => getCachedPageData<User[]>("admin:users") || []);
+  const [loadingUsers, setLoadingUsers] = useState(() => users.length === 0);
   const [error, setError] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState({ full_name: "", role: "", phone: "" });
@@ -24,14 +26,20 @@ export function AdministrationPage() {
   const [linkCopied, setLinkCopied] = useState(false);
 
   useEffect(() => {
+    if (users.length > 0) return;
     loadData();
   }, []);
 
   const loadData = async () => {
+    if (users.length === 0) setLoadingUsers(true);
     try {
       const u = await api.get<User[]>("/users/");
       setUsers(u);
+      setCachedPageData("admin:users", u, 30000);
     } catch { /* ignore */ }
+    finally {
+      setLoadingUsers(false);
+    }
   };
 
   const startEdit = (user: User) => {
@@ -168,7 +176,15 @@ export function AdministrationPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {users.map((u) => (
+                {loadingUsers && users.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-8">
+                      <div className="animate-pulse space-y-3">
+                        {[...Array(4)].map((_, i) => <div key={i} className="h-10 bg-gray-100 rounded" />)}
+                      </div>
+                    </td>
+                  </tr>
+                ) : users.map((u) => (
                   <tr key={u.id} className="hover:bg-blue-50/30 transition-colors group">
                     {editingId === u.id ? (
                       <td colSpan={4} className="px-6 py-3">

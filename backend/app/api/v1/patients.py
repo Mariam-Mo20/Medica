@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select, or_, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
+from time import perf_counter
 from app.core.database import get_db
 from app.middleware.auth_middleware import get_current_user, require_role
 from app.middleware.tenant_middleware import get_current_tenant
@@ -48,6 +49,9 @@ async def list_patients(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
 ):
+    handler_started_at = perf_counter()
+
+    query_started_at = perf_counter()
     result = await db.execute(
         select(Patient)
         .where(Patient.tenant_id == tenant.id)
@@ -55,7 +59,20 @@ async def list_patients(
         .offset(skip)
         .limit(limit)
     )
-    return result.scalars().all()
+    patients = result.scalars().all()
+    query_ms = (perf_counter() - query_started_at) * 1000
+
+    serialize_started_at = perf_counter()
+    payload = [PatientResponse.model_validate(p) for p in patients]
+    serialize_ms = (perf_counter() - serialize_started_at) * 1000
+
+    handler_ms = (perf_counter() - handler_started_at) * 1000
+    print(
+        f"[perf][patients] list query={query_ms:.1f}ms serialize={serialize_ms:.1f}ms "
+        f"handler={handler_ms:.1f}ms rows={len(payload)}"
+    )
+
+    return payload
 
 
 @router.get("/search", response_model=list[PatientSearchResult])

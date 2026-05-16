@@ -3,6 +3,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
+from time import perf_counter
 
 from app.core.config import settings
 from app.core.database import engine, Base
@@ -57,6 +58,30 @@ async def lifespan(app: FastAPI):
                         if not col_info.get("nullable", True):
                             conn_sync.execute(text("ALTER TABLE prescriptions ALTER COLUMN doctor_id DROP NOT NULL"))
             await conn.run_sync(migrate_prescriptions)
+
+            def ensure_perf_indexes(conn_sync):
+                conn_sync.execute(text(
+                    "CREATE INDEX IF NOT EXISTS idx_users_email ON users (email)"
+                ))
+                conn_sync.execute(text(
+                    "CREATE INDEX IF NOT EXISTS idx_users_tenant_id ON users (tenant_id)"
+                ))
+                conn_sync.execute(text(
+                    "CREATE INDEX IF NOT EXISTS idx_tenants_id ON tenants (id)"
+                ))
+                conn_sync.execute(text(
+                    "CREATE INDEX IF NOT EXISTS idx_patients_tenant_id ON patients (tenant_id)"
+                ))
+                conn_sync.execute(text(
+                    "CREATE INDEX IF NOT EXISTS idx_appt_tenant_scheduled ON appointments (tenant_id, scheduled_at DESC)"
+                ))
+                conn_sync.execute(text(
+                    "CREATE INDEX IF NOT EXISTS idx_appt_tenant_status_scheduled ON appointments (tenant_id, status, scheduled_at DESC)"
+                ))
+                conn_sync.execute(text(
+                    "CREATE INDEX IF NOT EXISTS idx_patient_tenant_created ON patients (tenant_id, created_at DESC)"
+                ))
+            await conn.run_sync(ensure_perf_indexes)
     except Exception:
         pass
 
@@ -80,6 +105,18 @@ app.add_middleware(
 )
 
 app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+
+@app.middleware("http")
+async def request_timing_middleware(request: Request, call_next):
+    started_at = perf_counter()
+    response = await call_next(request)
+    duration_ms = (perf_counter() - started_at) * 1000
+    path = request.url.path
+    method = request.method
+    if path.startswith("/api/") or path == "/health":
+        print(f"[perf][api] {method} {path} -> {response.status_code} in {duration_ms:.1f}ms")
+    return response
 
 
 @app.exception_handler(Exception)

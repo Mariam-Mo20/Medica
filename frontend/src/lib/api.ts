@@ -2,6 +2,24 @@ import { useAuthStore } from "@/store/authStore";
 
 const BASE_URL = "/api/v1";
 
+function shouldPerfLog(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return localStorage.getItem("perf_debug") === "1" || window.location.search.includes("perf=1");
+  } catch {
+    return false;
+  }
+}
+
+function perfLog(message: string, extra?: Record<string, unknown>) {
+  if (!shouldPerfLog()) return;
+  if (extra) {
+    console.info(`[perf][api] ${message}`, extra);
+  } else {
+    console.info(`[perf][api] ${message}`);
+  }
+}
+
 function getHeaders(): HeadersInit {
   const token = localStorage.getItem("access_token");
   const h: Record<string, string> = { "Content-Type": "application/json" };
@@ -41,6 +59,7 @@ async function handleErr(res: Response): Promise<never> {
 
 async function req<T>(method: string, path: string, body?: unknown): Promise<T> {
   const url = `${BASE_URL}${path}`;
+  const startedAt = performance.now();
   const opts: RequestInit = { method, headers: getHeaders() };
   if (body !== undefined) opts.body = JSON.stringify(body);
 
@@ -48,6 +67,7 @@ async function req<T>(method: string, path: string, body?: unknown): Promise<T> 
   try {
     res = await fetch(url, opts);
   } catch (e) {
+    perfLog("request failed", { method, path, durationMs: Math.round(performance.now() - startedAt) });
     throw new Error(`Network error: ${e instanceof Error ? e.message : "Could not reach server"}`);
   }
 
@@ -62,7 +82,14 @@ async function req<T>(method: string, path: string, body?: unknown): Promise<T> 
     }
   }
   if (!res.ok) return handleErr(res);
-  return res.json();
+  const data = await res.json();
+  perfLog("request complete", {
+    method,
+    path,
+    status: res.status,
+    durationMs: Math.round(performance.now() - startedAt),
+  });
+  return data;
 }
 
 export const api = {

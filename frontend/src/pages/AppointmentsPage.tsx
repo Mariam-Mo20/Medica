@@ -5,6 +5,7 @@ import { formatDisplayDate, formatDisplayTime } from "@/lib/date";
 import { Appointment } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { getCachedPageData, setCachedPageData } from "@/lib/pageDataCache";
 import {
   Plus,
   CalendarCheck,
@@ -86,9 +87,9 @@ function visitType(reason?: string) {
 
 export function AppointmentsPage() {
   const navigate = useNavigate();
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>(() => getCachedPageData<Appointment[]>("appointments:list") || []);
   const [statusFilter, setStatusFilter] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => appointments.length === 0);
   const [page, setPage] = useState(1);
   const [shareSuccess, setShareSuccess] = useState("");
   const [shareError, setShareError] = useState("");
@@ -107,15 +108,22 @@ export function AppointmentsPage() {
   }, [shareSuccess, shareError]);
 
   const fetchAppointments = () => {
+    if (appointments.length === 0) {
+      setLoading(true);
+    }
     setLoadError("");
     api
       .get<Appointment[]>(`/appointments/?limit=60`)
-      .then(setAppointments)
+      .then((data) => {
+        setAppointments(data);
+        setCachedPageData("appointments:list", data, 30000);
+      })
       .catch((err) => setLoadError(err instanceof Error ? err.message : "Failed to load appointments"))
       .finally(() => setLoading(false));
   };
 
   useEffect(() => {
+    if (appointments.length > 0) return;
     fetchAppointments();
   }, []);
 

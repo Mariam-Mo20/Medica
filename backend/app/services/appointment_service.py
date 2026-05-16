@@ -91,22 +91,20 @@ async def appointment_to_response(appointment: Appointment, db: AsyncSession) ->
         updated_at=appointment.updated_at,
     )
 
-    patient = getattr(appointment, "patient", None)
-    if patient is None and appointment.patient_id:
+    patient = None
+    if appointment.patient_id:
         patient_result = await db.execute(select(Patient).where(Patient.id == appointment.patient_id))
         patient = patient_result.scalar_one_or_none()
     if patient:
         resp.patient_name = f"{patient.first_name} {patient.last_name}"
 
-    doctor = getattr(appointment, "doctor", None)
-    if doctor is None and appointment.doctor_id:
+    doctor = None
+    if appointment.doctor_id:
         doctor_result = await db.execute(select(Doctor).where(Doctor.id == appointment.doctor_id))
         doctor = doctor_result.scalar_one_or_none()
     if doctor:
-        doctor_user = getattr(doctor, "user", None)
-        if doctor_user is None:
-            user_result = await db.execute(select(User).where(User.id == doctor.user_id))
-            doctor_user = user_result.scalar_one_or_none()
+        user_result = await db.execute(select(User).where(User.id == doctor.user_id))
+        doctor_user = user_result.scalar_one_or_none()
         if doctor_user:
             resp.doctor_name = doctor_user.full_name
 

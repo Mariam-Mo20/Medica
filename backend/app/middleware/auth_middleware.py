@@ -8,16 +8,36 @@ from app.core.security import decode_token
 from app.models.user import User
 
 _USER_CACHE_TTL = 10  # seconds — intentional stale window; role/active changes propagate within this bound
-_user_cache: dict[int, tuple[User, float]] = {}
+_user_cache: dict[int, tuple[dict, float]] = {}
 
 def _get_cached_user(user_id: int) -> User | None:
     entry = _user_cache.get(user_id)
     if entry and entry[1] > time():
-        return entry[0]
+        data = entry[0]
+        return User(
+            id=data["id"],
+            tenant_id=data["tenant_id"],
+            email=data["email"],
+            full_name=data["full_name"],
+            role=data["role"],
+            phone=data["phone"],
+            is_active=data["is_active"],
+        )
     return None
 
 def _set_cached_user(user: User):
-    _user_cache[user.id] = (user, time() + _USER_CACHE_TTL)
+    _user_cache[user.id] = (
+        {
+            "id": user.id,
+            "tenant_id": user.tenant_id,
+            "email": user.email,
+            "full_name": user.full_name,
+            "role": user.role,
+            "phone": user.phone,
+            "is_active": user.is_active,
+        },
+        time() + _USER_CACHE_TTL,
+    )
 
 
 async def get_current_user(request: Request, db: AsyncSession = Depends(get_db)) -> User:

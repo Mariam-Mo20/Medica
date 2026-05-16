@@ -11,9 +11,63 @@ from app.models.appointment import Appointment
 from app.models.doctor import Doctor
 from app.models.patient import Patient
 from app.schemas.appointment import AppointmentCreate, AppointmentUpdate, AppointmentResponse, AppointmentStatusUpdate
-from app.services.appointment_service import check_conflict, generate_series_instances, appointment_to_response
+from app.services.appointment_service import check_conflict, generate_series_instances
 
 router = APIRouter()
+
+
+async def _fetch_appointment_response_by_id(db: AsyncSession, appointment_id: int, tenant_id: int) -> AppointmentResponse:
+    result = await db.execute(
+        select(
+            Appointment.id,
+            Appointment.tenant_id,
+            Appointment.patient_id,
+            Appointment.doctor_id,
+            Appointment.receptionist_id,
+            Appointment.scheduled_at,
+            Appointment.duration_minutes,
+            Appointment.status,
+            Appointment.reason,
+            Appointment.notes,
+            Appointment.recurring_rule,
+            Appointment.recurring_end_date,
+            Appointment.series_id,
+            Appointment.is_series_cancelled,
+            Appointment.created_at,
+            Appointment.updated_at,
+            Patient.first_name,
+            Patient.last_name,
+            User.full_name.label("doctor_name"),
+        )
+        .outerjoin(Patient, and_(Patient.id == Appointment.patient_id, Patient.tenant_id == tenant_id))
+        .outerjoin(Doctor, and_(Doctor.id == Appointment.doctor_id, Doctor.tenant_id == tenant_id))
+        .outerjoin(User, User.id == Doctor.user_id)
+        .where(Appointment.id == appointment_id, Appointment.tenant_id == tenant_id)
+    )
+    row = result.one_or_none()
+    if row is None:
+        raise HTTPException(status_code=404, detail="Appointment not found")
+
+    return AppointmentResponse(
+        id=row.id,
+        tenant_id=row.tenant_id,
+        patient_id=row.patient_id,
+        doctor_id=row.doctor_id,
+        receptionist_id=row.receptionist_id,
+        scheduled_at=row.scheduled_at,
+        duration_minutes=row.duration_minutes,
+        status=row.status,
+        reason=row.reason,
+        notes=row.notes,
+        recurring_rule=row.recurring_rule,
+        recurring_end_date=row.recurring_end_date,
+        series_id=row.series_id,
+        is_series_cancelled=row.is_series_cancelled,
+        created_at=row.created_at,
+        updated_at=row.updated_at,
+        patient_name=f"{row.first_name} {row.last_name}".strip(),
+        doctor_name=row.doctor_name,
+    )
 
 
 @router.post("/", response_model=AppointmentResponse, status_code=201)
@@ -49,8 +103,7 @@ async def create_appointment(
             db.add(inst)
 
     await db.flush()
-    await db.refresh(appointment)
-    return await appointment_to_response(appointment, db)
+    return await _fetch_appointment_response_by_id(db, appointment.id, tenant.id)
 
 
 @router.get("/", response_model=list[AppointmentResponse])
@@ -147,7 +200,7 @@ async def get_appointment(
     appointment = result.scalar_one_or_none()
     if not appointment:
         raise HTTPException(status_code=404, detail="Appointment not found")
-    return await appointment_to_response(appointment, db)
+    return await _fetch_appointment_response_by_id(db, appointment.id, tenant.id)
 
 
 @router.put("/{appointment_id}", response_model=AppointmentResponse)
@@ -180,7 +233,7 @@ async def update_appointment(
 
     await db.flush()
     await db.refresh(appointment)
-    return await appointment_to_response(appointment, db)
+    return await _fetch_appointment_response_by_id(db, appointment.id, tenant.id)
 
 
 
@@ -206,7 +259,7 @@ async def update_appointment_status(
     appointment.status = data.status
     await db.flush()
     await db.refresh(appointment)
-    return await appointment_to_response(appointment, db)
+    return await _fetch_appointment_response_by_id(db, appointment.id, tenant.id)
 
 
 @router.delete("/{appointment_id}")

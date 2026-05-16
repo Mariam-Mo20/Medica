@@ -194,13 +194,12 @@ export function Layout() {
               </button>
               {!sidebarCollapsed && (
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-base font-bold text-primary leading-none truncate pt-0.5">Medica</h2>
-                    <div className="flex-1" />
+                  <div className="flex items-center min-h-9">
+                    <h2 className="text-base font-bold text-primary leading-none truncate">Medica</h2>
                     <button
                       type="button"
                       onClick={() => setSidebarCollapsed(true)}
-                      className="hidden lg:flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                      className="hidden lg:flex ml-auto items-center justify-center text-muted-foreground hover:text-foreground transition-colors shrink-0"
                       title="Collapse sidebar"
                     >
                       <PanelLeftClose className="h-4 w-4" />

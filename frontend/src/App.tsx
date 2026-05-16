@@ -4,7 +4,6 @@ import { useAuthStore } from "@/store/authStore";
 import { AuthGuard } from "@/components/AuthGuard";
 import { Layout } from "@/components/Layout";
 
-const LandingPage = lazy(() => import("@/pages/LandingPage").then((m) => ({ default: m.LandingPage })));
 const LoginPage = lazy(() => import("@/pages/LoginPage").then((m) => ({ default: m.LoginPage })));
 const DashboardPage = lazy(() => import("@/pages/DashboardPage").then((m) => ({ default: m.DashboardPage })));
 const PatientsPage = lazy(() => import("@/pages/PatientsPage").then((m) => ({ default: m.PatientsPage })));
@@ -14,7 +13,9 @@ const AddVisitPage = lazy(() => import("@/pages/AddVisitPage").then((m) => ({ de
 const AppointmentsPage = lazy(() => import("@/pages/AppointmentsPage").then((m) => ({ default: m.AppointmentsPage })));
 const AppointmentFormPage = lazy(() => import("@/pages/AppointmentFormPage").then((m) => ({ default: m.AppointmentFormPage })));
 const SignupPage = lazy(() => import("@/pages/SignupPage").then((m) => ({ default: m.SignupPage })));
-
+const RolePage = lazy(() => import("@/pages/RolePage").then((m) => ({ default: m.RolePage })));
+const ClinicPage = lazy(() => import("@/pages/ClinicPage").then((m) => ({ default: m.ClinicPage })));
+const SignupCompletePage = lazy(() => import("@/pages/SignupCompletePage").then((m) => ({ default: m.SignupCompletePage })));
 const ConsultationPage = lazy(() => import("@/pages/ConsultationPage").then((m) => ({ default: m.ConsultationPage })));
 const AdministrationPage = lazy(() => import("@/pages/AdministrationPage").then((m) => ({ default: m.AdministrationPage })));
 const SettingsPage = lazy(() => import("@/pages/SettingsPage").then((m) => ({ default: m.SettingsPage })));
@@ -50,9 +51,12 @@ export default function App() {
     <>
       <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">Loading...</div>}>
         <Routes>
-          <Route path="/" element={<LandingPage />} />
+          <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          <Route path="/signup/role" element={<RolePage />} />
+          <Route path="/signup/clinic" element={<ClinicPage />} />
+          <Route path="/signup/complete" element={<SignupCompletePage />} />
           <Route
             element={
               <AuthGuard>
@@ -72,7 +76,7 @@ export default function App() {
             <Route path="/administration" element={<AdministrationPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </Suspense>
     </>

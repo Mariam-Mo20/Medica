@@ -196,10 +196,10 @@ export function AppointmentsPage() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5 lg:space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Appointment Schedule</h1>
+          <h1 className="text-lg lg:text-xl font-bold text-foreground">Appointment Schedule</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Manage and monitor all clinical visits for the current cycle.
           </p>
@@ -228,58 +228,58 @@ export function AppointmentsPage() {
         <div className="p-3 text-sm bg-red-50 text-red-600 rounded-lg border border-red-100">{loadError}</div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-3">
         <Card className="border-border shadow-sm rounded-xl">
-          <CardContent className="p-5">
+          <CardContent className="p-4 lg:p-3">
             <div className="flex justify-between items-start mb-3">
               <div className="p-2 bg-primary-container rounded-lg text-primary">
                 <CalendarCheck className="h-5 w-5" />
               </div>
             </div>
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Booked Today</p>
-            <p className="text-2xl font-bold text-foreground mt-1">{todayBooked}</p>
+            <p className="text-lg lg:text-[1.1rem] font-bold text-foreground mt-1">{todayBooked}</p>
           </CardContent>
         </Card>
 
         <Card className="border-border shadow-sm rounded-xl">
-          <CardContent className="p-5">
+          <CardContent className="p-4 lg:p-3">
             <div className="flex justify-between items-start mb-3">
               <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600">
                 <CalendarCheck className="h-5 w-5" />
               </div>
             </div>
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Completed</p>
-            <p className="text-2xl font-bold text-foreground mt-1">{completedCount}</p>
+            <p className="text-lg lg:text-[1.1rem] font-bold text-foreground mt-1">{completedCount}</p>
           </CardContent>
         </Card>
 
         <Card className="border-border shadow-sm rounded-xl">
-          <CardContent className="p-5">
+          <CardContent className="p-4 lg:p-3">
             <div className="flex justify-between items-start mb-3">
               <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
                 <CalendarCheck className="h-5 w-5" />
               </div>
             </div>
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Checked In</p>
-            <p className="text-2xl font-bold text-foreground mt-1">{checkedInCount}</p>
+            <p className="text-lg lg:text-[1.1rem] font-bold text-foreground mt-1">{checkedInCount}</p>
           </CardContent>
         </Card>
 
         <Card className="border-border shadow-sm rounded-xl">
-          <CardContent className="p-5">
+          <CardContent className="p-4 lg:p-3">
             <div className="flex justify-between items-start mb-3">
               <div className="p-2 bg-purple-50 rounded-lg text-purple-600">
                 <CalendarCheck className="h-5 w-5" />
               </div>
             </div>
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">In Progress</p>
-            <p className="text-2xl font-bold text-foreground mt-1">{inProgressCount}</p>
+            <p className="text-lg lg:text-[1.1rem] font-bold text-foreground mt-1">{inProgressCount}</p>
           </CardContent>
         </Card>
       </div>
 
       <div className="bg-white border border-border rounded-xl shadow-sm overflow-hidden">
-        <div className="p-5 border-b border-border flex flex-wrap items-center justify-between gap-3">
+        <div className="p-4 lg:p-3 border-b border-border flex flex-wrap items-center justify-between gap-3">
           <div className="flex bg-gray-100 rounded-lg p-0.5">
               <button
                 onClick={() => { setShowTodayOnly(true); setPage(1); }}
@@ -339,11 +339,11 @@ export function AppointmentsPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-surface border-b border-border">
-                  <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider w-10">#</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Patient Name</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Appointment Time</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-center">Status</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-right">Actions</th>
+                  <th className="px-5 lg:px-4 py-3 lg:py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider w-10">#</th>
+                  <th className="px-5 lg:px-4 py-3 lg:py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Patient Name</th>
+                  <th className="px-5 lg:px-4 py-3 lg:py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Appointment Time</th>
+                  <th className="px-5 lg:px-4 py-3 lg:py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-center">Status</th>
+                  <th className="px-5 lg:px-4 py-3 lg:py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="text-sm">
@@ -358,13 +358,13 @@ export function AppointmentsPage() {
                       key={apt.id}
                       className="hover:bg-primary/5 transition-colors border-b border-border group"
                     >
-                      <td className="px-6 py-4 text-sm text-muted-foreground font-medium">
+                      <td className="px-5 lg:px-4 py-3 lg:py-2.5 text-sm text-muted-foreground font-medium">
                         {(page - 1) * PAGE_SIZE + idx + 1}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-5 lg:px-4 py-3 lg:py-2.5">
                         <div className="flex items-center gap-3">
                           <div
-                            className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${avatarColor}`}
+                            className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${avatarColor}`}
                           >
                             {initials || "?"}
                           </div>
@@ -374,7 +374,7 @@ export function AppointmentsPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-5 lg:px-4 py-3 lg:py-2.5">
                         <div>
                           <p className="text-sm font-medium text-foreground">{time}</p>
                           <p className="text-xs text-muted-foreground">
@@ -382,7 +382,7 @@ export function AppointmentsPage() {
                           </p>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-center">
+                      <td className="px-5 lg:px-4 py-3 lg:py-2.5 text-center">
                           <select
                             value={apt.status}
                             onChange={(e) => handleStatusChange(apt.id, e.target.value)}
@@ -403,7 +403,7 @@ export function AppointmentsPage() {
                             })}
                         </select>
                       </td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-5 lg:px-4 py-3 lg:py-2.5 text-right">
                         <div className="flex items-center justify-end gap-1">
                           <button
                             className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
@@ -434,7 +434,7 @@ export function AppointmentsPage() {
         )}
 
         {!loading && filtered.length > 0 && (
-          <div className="p-5 flex items-center justify-between bg-surface border-t border-border">
+          <div className="p-4 lg:p-3 flex items-center justify-between bg-surface border-t border-border">
             <p className="text-xs text-muted-foreground">
               Showing{" "}
               <span className="font-medium text-foreground">

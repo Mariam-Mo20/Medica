@@ -91,11 +91,11 @@ export function DashboardPage() {
     : 0;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5 lg:space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">{greeting}, {user?.full_name?.split(" ")[0] || "there"}!</h1>
-          <p className="text-sm text-muted-foreground mt-1">Here's your clinic overview</p>
+          <h1 className="text-lg lg:text-xl font-bold text-foreground">{greeting}, {user?.full_name?.split(" ")[0] || "there"}!</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">Here's your clinic overview</p>
         </div>
         <Button onClick={() => navigate("/appointments/new")} className="gap-2 rounded-lg h-10 shadow-sm">
           <Plus className="h-4 w-4" />
@@ -105,41 +105,41 @@ export function DashboardPage() {
 
       {error && <div className="p-3 text-sm bg-red-50 text-red-600 rounded-lg border border-red-100">{error}</div>}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-3">
         <Card className="border-border shadow-sm rounded-xl">
-          <CardContent className="p-5">
+          <CardContent className="p-4 lg:p-3">
             <div className="flex justify-between items-start mb-3">
-              <div className="p-2.5 bg-blue-50 text-blue-700 rounded-lg">
+               <div className="p-2 bg-blue-50 text-blue-700 rounded-lg">
                 <Users className="h-5 w-5" />
               </div>
             </div>
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Patients</p>
-            <p className="text-2xl font-bold text-foreground mt-1">{stats.patients_today}</p>
+            <p className="text-lg lg:text-[1.1rem] font-bold text-foreground mt-1">{stats.patients_today}</p>
           </CardContent>
         </Card>
 
         <Card className="border-border shadow-sm rounded-xl">
-          <CardContent className="p-5">
+          <CardContent className="p-4 lg:p-3">
             <div className="flex justify-between items-start mb-3">
-              <div className="p-2.5 bg-primary-container text-primary rounded-lg">
+               <div className="p-2 bg-primary-container text-primary rounded-lg">
                 <Calendar className="h-5 w-5" />
               </div>
             </div>
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">New Patients</p>
-            <p className="text-2xl font-bold text-foreground mt-1">{stats.new_patients_today}</p>
+            <p className="text-lg lg:text-[1.1rem] font-bold text-foreground mt-1">{stats.new_patients_today}</p>
           </CardContent>
         </Card>
 
         <Card className="border-border shadow-sm rounded-xl">
-          <CardContent className="p-5">
+          <CardContent className="p-4 lg:p-3">
             <div className="flex justify-between items-start mb-3">
-              <div className="p-2.5 bg-primary-container text-primary rounded-lg">
+               <div className="p-2 bg-primary-container text-primary rounded-lg">
                 <CalendarCheck className="h-5 w-5" />
               </div>
               <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-full">{stats.completed_appointments} completed</span>
             </div>
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Appointments</p>
-            <p className="text-2xl font-bold text-foreground mt-1">
+            <p className="text-lg lg:text-[1.1rem] font-bold text-foreground mt-1">
               {stats.completed_appointments} / {stats.today_appointments}
             </p>
             <div className="w-full bg-gray-100 h-1.5 rounded-full mt-3 overflow-hidden">
@@ -152,9 +152,9 @@ export function DashboardPage() {
         </Card>
 
         <Card className="border-border shadow-sm rounded-xl">
-          <CardContent className="p-5">
+          <CardContent className="p-4 lg:p-3">
             <div className="flex justify-between items-start mb-3">
-              <div className="p-2.5 bg-primary-container text-primary rounded-lg">
+               <div className="p-2 bg-primary-container text-primary rounded-lg">
                 <Users className="h-5 w-5" />
               </div>
               <button
@@ -165,17 +165,17 @@ export function DashboardPage() {
               </button>
             </div>
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Completed Visits</p>
-            <p className="text-2xl font-bold text-foreground mt-1">{stats.completed_appointments}</p>
+            <p className="text-lg lg:text-[1.1rem] font-bold text-foreground mt-1">{stats.completed_appointments}</p>
 
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-7 flex flex-col gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-3">
+        <div className="lg:col-span-7 flex flex-col gap-4 lg:gap-3">
           <Card className="border-border shadow-sm rounded-xl">
-            <CardContent className="p-5">
-              <div className="flex justify-between items-center mb-5">
+            <CardContent className="p-4 lg:p-3">
+              <div className="flex justify-between items-center mb-3">
                 <div>
                   <h3 className="text-base font-semibold text-foreground">Clinical Analytics</h3>
                   <p className="text-sm text-muted-foreground">Appointment distribution by status</p>
@@ -183,7 +183,7 @@ export function DashboardPage() {
                 <div />
               </div>
               {chartData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={280}>
+                <ResponsiveContainer width="100%" height={220}>
                   <BarChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                     <XAxis dataKey="name" tick={{ fontSize: 12, fill: "#6b7280" }} />
@@ -200,7 +200,7 @@ export function DashboardPage() {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+                 <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
                   <Activity className="h-8 w-8 mb-2" />
                   <p className="text-sm">No appointment data available</p>
                 </div>
@@ -209,9 +209,9 @@ export function DashboardPage() {
           </Card>
         </div>
 
-        <div className="lg:col-span-5 flex flex-col gap-6">
+        <div className="lg:col-span-5 flex flex-col gap-4 lg:gap-3">
           <Card className="border-border shadow-sm rounded-xl">
-            <div className="px-5 py-4 border-b border-border flex justify-between items-center">
+            <div className="px-4 lg:px-3 py-3 lg:py-2.5 border-b border-border flex justify-between items-center">
               <h3 className="text-base font-semibold text-foreground">Recent Appointments</h3>
               <Button
                 variant="ghost"
@@ -223,7 +223,7 @@ export function DashboardPage() {
             </div>
             <div className="divide-y divide-border">
                {recentAppointments.length === 0 ? (
-                 <div className="px-5 py-12 text-center text-muted-foreground">
+                  <div className="px-4 py-8 text-center text-muted-foreground">
                    <Calendar className="h-8 w-8 mx-auto mb-2" />
                    <p className="text-sm">No recent appointments</p>
                  </div>
@@ -243,7 +243,7 @@ export function DashboardPage() {
                     : "—";
 
                   return (
-                    <div key={String(apt.id)} className="flex items-center justify-between px-5 py-3 hover:bg-accent/50 transition-colors">
+                    <div key={String(apt.id)} className="flex items-center justify-between px-4 lg:px-3 py-2.5 lg:py-2 hover:bg-accent/50 transition-colors">
                       <div className="flex items-center gap-3 min-w-0">
                         <img
                           src={`https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=E8F0FE&color=0F4C81&size=64`}

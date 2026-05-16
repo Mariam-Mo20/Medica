@@ -48,6 +48,12 @@
     text-size-adjust: 100%;
   }
 
+  @media (min-width: 1024px) {
+    html {
+      font-size: 14px;
+    }
+  }
+
   html,
   body,
   #root {

@@ -85,10 +85,10 @@ export function PatientsPage() {
   const paginated = displayed.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5 lg:space-y-4">
       <div className="flex flex-wrap justify-between items-end gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Patients</h1>
+          <h1 className="text-lg lg:text-xl font-bold text-foreground">Patients</h1>
           <p className="text-sm text-muted-foreground mt-1">Manage and monitor patient health records and clinical status.</p>
         </div>
         <Button onClick={() => navigate("/patients/new")} className="rounded-xl shadow-sm gap-2 h-11 px-5">
@@ -97,16 +97,16 @@ export function PatientsPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-3">
         <Card className="border-border/70 shadow-sm rounded-2xl relative overflow-hidden group">
-          <CardContent className="p-6">
+          <CardContent className="p-5 lg:p-4">
             <div className="flex justify-between items-start mb-4">
               <div className="p-3 bg-primary/10 rounded-xl text-primary group-hover:scale-110 transition-transform">
                 <Users className="h-5 w-5" />
               </div>
             </div>
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Patients</p>
-            <p className="text-2xl font-bold text-foreground mt-1">{patients.length}</p>
+            <p className="text-lg lg:text-[1.1rem] font-bold text-foreground mt-1">{patients.length}</p>
           </CardContent>
           <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
             <Users className="h-28 w-28" />
@@ -114,14 +114,14 @@ export function PatientsPage() {
         </Card>
 
         <Card className="border-border/70 shadow-sm rounded-2xl relative overflow-hidden group">
-          <CardContent className="p-6">
+          <CardContent className="p-5 lg:p-4">
             <div className="flex justify-between items-start mb-4">
               <div className="p-3 bg-primary/10 rounded-xl text-primary group-hover:scale-110 transition-transform">
                 <Activity className="h-5 w-5" />
               </div>
             </div>
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">New Admissions Today</p>
-            <p className="text-2xl font-bold text-foreground mt-1">{newToday}</p>
+            <p className="text-lg lg:text-[1.1rem] font-bold text-foreground mt-1">{newToday}</p>
           </CardContent>
           <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
             <Activity className="h-28 w-28" />
@@ -159,8 +159,8 @@ export function PatientsPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-border/50">
-                <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Patient Name</th>
-                <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-right">Actions</th>
+                 <th className="px-5 lg:px-4 py-3 lg:py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Patient Name</th>
+                 <th className="px-5 lg:px-4 py-3 lg:py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/30">
@@ -196,9 +196,9 @@ export function PatientsPage() {
                       className="hover:bg-primary/5 transition-colors cursor-pointer group"
                       onClick={() => navigate(`/patients/${patient.id}`)}
                     >
-                      <td className="px-6 py-4">
+                      <td className="px-5 lg:px-4 py-3 lg:py-2.5">
                         <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${avatarColor}`}>
+                           <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${avatarColor}`}>
                             {initials}
                           </div>
                           <div>
@@ -209,7 +209,7 @@ export function PatientsPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-5 lg:px-4 py-3 lg:py-2.5 text-right">
                         <div className="flex items-center justify-end gap-1">
                           <button
                             className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
@@ -238,7 +238,7 @@ export function PatientsPage() {
           </table>
         </div>
         {!loading && displayed.length > 0 && (
-          <div className="px-6 py-4 border-t border-border/50 flex items-center justify-between bg-surface/50">
+          <div className="px-5 lg:px-4 py-3 lg:py-2.5 border-t border-border/50 flex items-center justify-between bg-surface/50">
             <p className="text-sm text-muted-foreground">
               Showing <span className="font-medium text-foreground">1-{paginated.length}</span> of{" "}
               <span className="font-medium text-foreground">{displayed.length}</span> patients

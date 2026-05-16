@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
-from sqlalchemy import select, func
+from sqlalchemy import select, func, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from time import perf_counter
 from app.models.patient import Patient
@@ -23,63 +23,72 @@ async def get_dashboard_stats(db: AsyncSession, tenant_id: int) -> DashboardStat
     today_start = today_start_local.astimezone(timezone.utc)
     today_end = today_end_local.astimezone(timezone.utc)
 
-    patient_stats_result = await timed_execute(
-        "patient_stats",
+    today_scope = and_(
+        Appointment.tenant_id == tenant_id,
+        Appointment.scheduled_at >= today_start,
+        Appointment.scheduled_at <= today_end,
+    )
+
+    summary_result = await timed_execute(
+        "summary_stats",
         select(
-            func.count(Patient.id)
-            .filter(Patient.tenant_id == tenant_id)
+            select(func.count(Patient.id))
+            .where(Patient.tenant_id == tenant_id)
+            .scalar_subquery()
             .label("total_patients"),
-            func.count(Patient.id)
-            .filter(
+            select(func.count(Patient.id))
+            .where(
                 Patient.tenant_id == tenant_id,
                 Patient.created_at >= today_start,
                 Patient.created_at <= today_end,
             )
+            .scalar_subquery()
             .label("new_patients_today"),
-        )
-    )
-    patient_stats = patient_stats_result.one()
-    total_patients = patient_stats.total_patients or 0
-    new_patients_today = patient_stats.new_patients_today or 0
-
-    appointment_stats_result = await timed_execute(
-        "appointment_stats",
-        select(
-            func.count(Appointment.id).label("today_appointments"),
-            func.count(Appointment.id)
-            .filter(Appointment.status == "completed")
+            select(func.count(Appointment.id))
+            .where(today_scope)
+            .scalar_subquery()
+            .label("today_appointments"),
+            select(func.count(Appointment.id))
+            .where(today_scope, Appointment.status == "completed")
+            .scalar_subquery()
             .label("completed_appointments"),
-            func.count(Appointment.id)
-            .filter(Appointment.status == "cancelled")
+            select(func.count(Appointment.id))
+            .where(today_scope, Appointment.status == "cancelled")
+            .scalar_subquery()
             .label("cancelled_appointments"),
-            func.count(Appointment.id)
-            .filter(Appointment.status == "scheduled")
+            select(func.count(Appointment.id))
+            .where(today_scope, Appointment.status == "scheduled")
+            .scalar_subquery()
             .label("scheduled_appointments"),
-            func.count(Appointment.id)
-            .filter(Appointment.status == "checked_in")
+            select(func.count(Appointment.id))
+            .where(today_scope, Appointment.status == "checked_in")
+            .scalar_subquery()
             .label("checked_in_appointments"),
-            func.count(Appointment.id)
-            .filter(Appointment.status == "in_progress")
+            select(func.count(Appointment.id))
+            .where(today_scope, Appointment.status == "in_progress")
+            .scalar_subquery()
             .label("in_progress_appointments"),
-            func.count(Appointment.id)
-            .filter(Appointment.status.in_(["scheduled", "checked_in"]))
+            select(func.count(Appointment.id))
+            .where(today_scope, Appointment.status.in_(["scheduled", "checked_in"]))
+            .scalar_subquery()
             .label("pending_appointments"),
-            func.count(func.distinct(Appointment.patient_id)).label("patients_today"),
-        ).where(
-            Appointment.tenant_id == tenant_id,
-            Appointment.scheduled_at >= today_start,
-            Appointment.scheduled_at <= today_end,
+            select(func.count(func.distinct(Appointment.patient_id)))
+            .where(today_scope)
+            .scalar_subquery()
+            .label("patients_today"),
         )
     )
-    appointment_stats = appointment_stats_result.one()
-    today_appointments = appointment_stats.today_appointments or 0
-    completed_appointments = appointment_stats.completed_appointments or 0
-    cancelled_appointments = appointment_stats.cancelled_appointments or 0
-    scheduled_appointments = appointment_stats.scheduled_appointments or 0
-    checked_in_appointments = appointment_stats.checked_in_appointments or 0
-    in_progress_appointments = appointment_stats.in_progress_appointments or 0
-    pending_appointments = appointment_stats.pending_appointments or 0
-    patients_today = appointment_stats.patients_today or 0
+    summary = summary_result.one()
+    total_patients = summary.total_patients or 0
+    new_patients_today = summary.new_patients_today or 0
+    today_appointments = summary.today_appointments or 0
+    completed_appointments = summary.completed_appointments or 0
+    cancelled_appointments = summary.cancelled_appointments or 0
+    scheduled_appointments = summary.scheduled_appointments or 0
+    checked_in_appointments = summary.checked_in_appointments or 0
+    in_progress_appointments = summary.in_progress_appointments or 0
+    pending_appointments = summary.pending_appointments or 0
+    patients_today = summary.patients_today or 0
     appointments_by_status = [
         {"status": "scheduled", "count": scheduled_appointments},
         {"status": "checked_in", "count": checked_in_appointments},

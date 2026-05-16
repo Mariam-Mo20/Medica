@@ -3,12 +3,13 @@ from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from app.core.database import get_db
-from app.middleware.auth_middleware import get_current_user, require_role
+from app.middleware.auth_middleware import require_role
 from app.middleware.tenant_middleware import get_current_tenant
 from app.models.tenant import Tenant
 from app.models.user import User
 from app.models.appointment import Appointment
 from app.models.doctor import Doctor
+from app.models.patient import Patient
 from app.schemas.appointment import AppointmentCreate, AppointmentUpdate, AppointmentResponse, AppointmentStatusUpdate
 from app.services.appointment_service import check_conflict, generate_series_instances, appointment_to_response
 
@@ -56,7 +57,6 @@ async def create_appointment(
 async def list_appointments(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_role("doctor", "assistant")),
-    tenant: Tenant = Depends(get_current_tenant),
     status: str | None = Query(None),
     doctor_id: int | None = Query(None),
     date_from: str | None = Query(None),
@@ -65,9 +65,31 @@ async def list_appointments(
     limit: int = Query(20, ge=1, le=100),
 ):
     query = (
-        select(Appointment)
-        .options(joinedload(Appointment.patient), joinedload(Appointment.doctor).joinedload(Doctor.user))
-        .where(Appointment.tenant_id == tenant.id)
+        select(
+            Appointment.id,
+            Appointment.tenant_id,
+            Appointment.patient_id,
+            Appointment.doctor_id,
+            Appointment.receptionist_id,
+            Appointment.scheduled_at,
+            Appointment.duration_minutes,
+            Appointment.status,
+            Appointment.reason,
+            Appointment.notes,
+            Appointment.recurring_rule,
+            Appointment.recurring_end_date,
+            Appointment.series_id,
+            Appointment.is_series_cancelled,
+            Appointment.created_at,
+            Appointment.updated_at,
+            Patient.first_name,
+            Patient.last_name,
+            User.full_name.label("doctor_name"),
+        )
+        .join(Patient, and_(Patient.id == Appointment.patient_id, Patient.tenant_id == current_user.tenant_id))
+        .outerjoin(Doctor, and_(Doctor.id == Appointment.doctor_id, Doctor.tenant_id == current_user.tenant_id))
+        .outerjoin(User, User.id == Doctor.user_id)
+        .where(Appointment.tenant_id == current_user.tenant_id)
     )
 
     if status:
@@ -83,9 +105,31 @@ async def list_appointments(
 
     query = query.order_by(Appointment.scheduled_at.desc()).offset(skip).limit(limit)
     result = await db.execute(query)
-    appointments = result.scalars().all()
+    rows = result.all()
 
-    return [await appointment_to_response(a, db) for a in appointments]
+    return [
+        AppointmentResponse(
+            id=row.id,
+            tenant_id=row.tenant_id,
+            patient_id=row.patient_id,
+            doctor_id=row.doctor_id,
+            receptionist_id=row.receptionist_id,
+            scheduled_at=row.scheduled_at,
+            duration_minutes=row.duration_minutes,
+            status=row.status,
+            reason=row.reason,
+            notes=row.notes,
+            recurring_rule=row.recurring_rule,
+            recurring_end_date=row.recurring_end_date,
+            series_id=row.series_id,
+            is_series_cancelled=row.is_series_cancelled,
+            created_at=row.created_at,
+            updated_at=row.updated_at,
+            patient_name=f"{row.first_name} {row.last_name}".strip(),
+            doctor_name=row.doctor_name,
+        )
+        for row in rows
+    ]
 
 
 @router.get("/{appointment_id}", response_model=AppointmentResponse)

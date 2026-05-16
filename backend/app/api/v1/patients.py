@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select, or_, func
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import aliased
+from sqlalchemy.orm import aliased, load_only
 from time import perf_counter
 from app.core.database import get_db
-from app.middleware.auth_middleware import get_current_user, require_role
+from app.middleware.auth_middleware import require_role
 from app.middleware.tenant_middleware import get_current_tenant
 from app.models.tenant import Tenant
 from app.models.user import User
@@ -45,7 +45,6 @@ async def create_patient(
 async def list_patients(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_role("doctor", "assistant")),
-    tenant: Tenant = Depends(get_current_tenant),
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
 ):
@@ -54,7 +53,24 @@ async def list_patients(
     query_started_at = perf_counter()
     result = await db.execute(
         select(Patient)
-        .where(Patient.tenant_id == tenant.id)
+        .options(
+            load_only(
+                Patient.id,
+                Patient.tenant_id,
+                Patient.medical_record_number,
+                Patient.first_name,
+                Patient.last_name,
+                Patient.date_of_birth,
+                Patient.gender,
+                Patient.phone,
+                Patient.email,
+                Patient.address,
+                Patient.is_active,
+                Patient.created_at,
+                Patient.updated_at,
+            )
+        )
+        .where(Patient.tenant_id == current_user.tenant_id)
         .order_by(Patient.created_at.desc())
         .offset(skip)
         .limit(limit)
@@ -80,7 +96,6 @@ async def search_patients(
     q: str = Query(min_length=1),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_role("doctor", "assistant")),
-    tenant: Tenant = Depends(get_current_tenant),
 ):
     term = f"%{q}%"
     latest_visit = (
@@ -88,7 +103,7 @@ async def search_patients(
             Appointment.patient_id.label("patient_id"),
             func.max(Appointment.scheduled_at).label("last_visit_at"),
         )
-        .where(Appointment.tenant_id == tenant.id)
+        .where(Appointment.tenant_id == current_user.tenant_id)
         .group_by(Appointment.patient_id)
         .subquery()
     )
@@ -110,10 +125,10 @@ async def search_patients(
             latest_appointment,
             (latest_appointment.patient_id == Patient.id)
             & (latest_appointment.scheduled_at == latest_visit.c.last_visit_at)
-            & (latest_appointment.tenant_id == tenant.id),
+            & (latest_appointment.tenant_id == current_user.tenant_id),
         )
         .where(
-            Patient.tenant_id == tenant.id,
+            Patient.tenant_id == current_user.tenant_id,
             or_(
                 Patient.first_name.ilike(term),
                 Patient.last_name.ilike(term),

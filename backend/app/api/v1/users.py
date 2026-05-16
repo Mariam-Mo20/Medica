@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import load_only
 from app.core.database import get_db
 from app.core.security import hash_password
-from app.middleware.auth_middleware import get_current_user, require_role
+from app.middleware.auth_middleware import require_role
 from app.middleware.tenant_middleware import get_current_tenant
 from app.models.tenant import Tenant
 from app.models.user import User
@@ -42,10 +43,23 @@ async def create_user(
 async def list_users(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_role("doctor", "assistant")),
-    tenant: Tenant = Depends(get_current_tenant),
 ):
     result = await db.execute(
-        select(User).where(User.tenant_id == tenant.id).order_by(User.created_at.desc())
+        select(User)
+        .options(
+            load_only(
+                User.id,
+                User.tenant_id,
+                User.email,
+                User.full_name,
+                User.role,
+                User.phone,
+                User.is_active,
+                User.created_at,
+            )
+        )
+        .where(User.tenant_id == current_user.tenant_id)
+        .order_by(User.created_at.desc())
     )
     return result.scalars().all()
 

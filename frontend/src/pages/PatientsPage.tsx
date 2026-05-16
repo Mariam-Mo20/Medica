@@ -53,8 +53,6 @@ export function PatientsPage() {
   const [newTodayCount, setNewTodayCount] = useState(() => getCachedPageData<number>("patients:newToday") || 0);
 
   useEffect(() => {
-    if (searchTerm.length < 2 && patients.length > 0) return;
-
     if (patients.length === 0 || searchTerm.length >= 2) {
       setLoading(true);
     }

@@ -7,7 +7,7 @@ from app.core.database import get_db
 from app.core.security import decode_token
 from app.models.user import User
 
-_USER_CACHE_TTL = 30  # seconds
+_USER_CACHE_TTL = 10  # seconds — intentional stale window; role/active changes propagate within this bound
 _user_cache: dict[int, tuple[User, float]] = {}
 
 def _get_cached_user(user_id: int) -> User | None:

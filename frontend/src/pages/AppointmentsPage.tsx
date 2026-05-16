@@ -123,7 +123,6 @@ export function AppointmentsPage() {
   };
 
   useEffect(() => {
-    if (appointments.length > 0) return;
     fetchAppointments();
   }, []);
 

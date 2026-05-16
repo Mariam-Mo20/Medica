@@ -70,7 +70,6 @@ export function DashboardPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (stats) return;
     if (!stats) setLoading(true);
     api.get<DashboardStats>("/dashboard/").then((dashboardStats) => {
       setStats(dashboardStats);

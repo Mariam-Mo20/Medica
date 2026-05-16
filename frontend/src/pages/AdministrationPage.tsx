@@ -26,7 +26,6 @@ export function AdministrationPage() {
   const [linkCopied, setLinkCopied] = useState(false);
 
   useEffect(() => {
-    if (users.length > 0) return;
     loadData();
   }, []);
 

@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "@/lib/api";
-import { Patient, Appointment } from "@/types";
+import { Patient, Appointment, PatientSearchResult } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { DateInput } from "@/components/ui/date-input";
-import { parseDateToISO } from "@/lib/date";
+import { daysAgo, parseDateToISO } from "@/lib/date";
 import { splitFullName } from "@/lib/name";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle, Save, Search, UserPlus, ArrowLeft, Loader2 } from "lucide-react";
@@ -27,7 +27,7 @@ const durationOptions = [
 export function AppointmentFormPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [patients, setPatients] = useState<Patient[]>([]);
+  const [patients, setPatients] = useState<PatientSearchResult[]>([]);
   const [patientSearch, setPatientSearch] = useState("");
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [showNewPatient, setShowNewPatient] = useState(false);
@@ -64,9 +64,14 @@ export function AppointmentFormPage() {
 
   const handlePatientSearch = async (q: string) => {
     setPatientSearch(q);
+    setError("");
     if (q.length >= 2) {
-      const results = await api.get<Patient[]>(`/patients/search?q=${encodeURIComponent(q)}`);
-      setPatients(results);
+      try {
+        const results = await api.get<PatientSearchResult[]>(`/patients/search?q=${encodeURIComponent(q)}`);
+        setPatients(results);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to search patients");
+      }
     } else {
       setPatients([]);
     }
@@ -205,19 +210,41 @@ export function AppointmentFormPage() {
                     />
                   </div>
                   {patients.length > 0 && (
-                    <div className="border rounded-md divide-y max-h-40 overflow-y-auto">
+                    <div className="border border-border rounded-lg divide-y max-h-52 overflow-y-auto bg-white shadow-sm">
                       {patients.map((p) => (
                         <button
                           key={p.id}
                           type="button"
-                          className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
+                          className="w-full text-left px-3 py-2.5 text-sm hover:bg-accent/60 transition-colors"
                           onClick={() => {
-                            setSelectedPatient(p);
+                            setSelectedPatient({
+                              id: p.id,
+                              tenant_id: 0,
+                              medical_record_number: p.medical_record_number,
+                              first_name: p.first_name,
+                              last_name: p.last_name,
+                              date_of_birth: p.date_of_birth,
+                              is_active: true,
+                              created_at: "",
+                              updated_at: "",
+                            });
                             setPatients([]);
                             setPatientSearch("");
                           }}
                         >
-                          {p.first_name} {p.last_name} · {p.medical_record_number}
+                          <div className="flex items-center gap-3">
+                            <img
+                              src={`https://ui-avatars.com/api/?name=${encodeURIComponent(`${p.first_name} ${p.last_name}`)}&background=E8F0FE&color=0F4C81&size=64`}
+                              alt={`${p.first_name} ${p.last_name}`}
+                              className="w-8 h-8 rounded-full border border-border"
+                            />
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-foreground truncate">{p.first_name} {p.last_name}</p>
+                              <p className="text-xs text-muted-foreground truncate">
+                                {daysAgo(p.last_visit_at)} · {p.last_visit_type || "Consultation"}
+                              </p>
+                            </div>
+                          </div>
                         </button>
                       ))}
                     </div>

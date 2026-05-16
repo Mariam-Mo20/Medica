@@ -5,10 +5,8 @@ import { formatDisplayDate, formatDisplayTime } from "@/lib/date";
 import { Appointment } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import {
   Plus,
-  Search,
   CalendarCheck,
   ChevronLeft,
   ChevronRight,
@@ -80,15 +78,6 @@ function isToday(dateStr: string) {
   return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
 }
 
-function timeAgo(dateStr: string) {
-  const d = new Date(dateStr).getTime();
-  const diff = Math.max(0, Date.now() - d);
-  const days = Math.floor(diff / 86400000);
-  if (days === 0) return "today";
-  if (days === 1) return "1 day ago";
-  return `${days} days ago`;
-}
-
 function visitType(reason?: string) {
   const r = (reason || "").toLowerCase();
   if (r.includes("follow")) return "Follow Up";
@@ -99,7 +88,6 @@ export function AppointmentsPage() {
   const navigate = useNavigate();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [statusFilter, setStatusFilter] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [shareSuccess, setShareSuccess] = useState("");
@@ -134,11 +122,6 @@ export function AppointmentsPage() {
   const filtered = useMemo(
     () => {
       let list = appointments;
-      if (searchQuery) {
-        list = list.filter((a) =>
-          (a.patient_name || "").toLowerCase().includes(searchQuery.toLowerCase()),
-        );
-      }
       if (showTodayOnly) {
         list = list.filter((a) => isToday(a.scheduled_at));
       }
@@ -147,7 +130,7 @@ export function AppointmentsPage() {
       }
       return list;
     },
-    [appointments, searchQuery, showTodayOnly, statusFilter],
+    [appointments, showTodayOnly, statusFilter],
   );
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
@@ -160,31 +143,6 @@ export function AppointmentsPage() {
     if (a.status !== "completed") return false;
     return isToday(a.scheduled_at);
   }).length;
-
-  const quickSearchPatients = useMemo(() => {
-    if (!searchQuery.trim()) return [] as Array<{ id: number; name: string; avatar: string; lastVisit: string; type: string }>;
-    const q = searchQuery.toLowerCase();
-    const byPatient = new Map<number, Appointment[]>();
-    for (const a of appointments) {
-      if (!byPatient.has(a.patient_id)) byPatient.set(a.patient_id, []);
-      byPatient.get(a.patient_id)!.push(a);
-    }
-    const out: Array<{ id: number; name: string; avatar: string; lastVisit: string; type: string }> = [];
-    byPatient.forEach((list, pid) => {
-      const sorted = [...list].sort((a, b) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime());
-      const latest = sorted[0];
-      const name = latest.patient_name || `Patient #${pid}`;
-      if (!name.toLowerCase().includes(q)) return;
-      out.push({
-        id: pid,
-        name,
-        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=E8F0FE&color=0F4C81&size=64`,
-        lastVisit: timeAgo(latest.scheduled_at),
-        type: visitType(latest.reason),
-      });
-    });
-    return out.slice(0, 8);
-  }, [appointments, searchQuery]);
 
   const handleStatusChange = async (aptId: number, newStatus: string) => {
     try {
@@ -322,43 +280,6 @@ export function AppointmentsPage() {
 
       <div className="bg-white border border-border rounded-xl shadow-sm overflow-hidden">
         <div className="p-5 border-b border-border flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="relative flex-1 min-w-[240px] max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search appointments or patients..."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setPage(1);
-                }}
-                className="pl-10 h-10 bg-surface border-border rounded-lg"
-              />
-              {quickSearchPatients.length > 0 && (
-                <div className="absolute mt-2 left-0 right-0 bg-white border border-border rounded-lg shadow-lg z-20 max-h-72 overflow-y-auto">
-                  {quickSearchPatients.map((p) => (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => {
-                        setSearchQuery(p.name);
-                        setPage(1);
-                      }}
-                      className="w-full text-left px-3 py-2.5 hover:bg-accent/60 transition-colors border-b border-border last:border-b-0"
-                    >
-                      <div className="flex items-center gap-3">
-                        <img src={p.avatar} alt={p.name} className="w-8 h-8 rounded-full border border-border object-cover" />
-                        <div>
-                          <p className="text-sm font-semibold text-foreground">{p.name}</p>
-                          <p className="text-xs text-muted-foreground">Last visit {p.lastVisit} · {p.type}</p>
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
           <div className="flex items-center gap-3">
             <div className="flex bg-gray-100 rounded-lg p-0.5">
               <button

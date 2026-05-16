@@ -34,7 +34,7 @@ const statusStyles: Record<string, string> = {
 };
 
 const statusLabels: Record<string, string> = {
-  scheduled: "Pending",
+  scheduled: "Scheduled",
   checked_in: "Checked In",
   in_progress: "In Progress",
   completed: "Confirmed",

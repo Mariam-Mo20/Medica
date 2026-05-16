@@ -236,7 +236,7 @@ export function Layout() {
       </aside>
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="flex items-center justify-between h-16 px-6 bg-white border-b border-border sticky top-0 z-30">
+        <header className="flex items-center justify-between h-16 px-4 sm:px-6 bg-white border-b border-border sticky top-0 z-30">
           <div className="flex items-center gap-4 flex-1">
             <Button
               variant="ghost"
@@ -338,7 +338,7 @@ export function Layout() {
         )}
 
         <main className="flex-1 overflow-y-auto">
-          <div className="p-6 lg:p-8 max-w-[1440px] mx-auto">
+          <div className="p-4 sm:p-6 lg:p-8 max-w-[1440px] mx-auto">
             <Outlet />
           </div>
         </main>

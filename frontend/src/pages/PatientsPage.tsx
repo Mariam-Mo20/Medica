@@ -132,7 +132,7 @@ export function PatientsPage() {
       </div>
 
       <div className="bg-white/70 backdrop-blur-xl border border-border/50 rounded-2xl p-4 flex flex-wrap gap-4 items-center justify-between shadow-sm">
-        <div className="flex-1 min-w-[280px] relative">
+        <div className="flex-1 min-w-0 w-full sm:w-auto relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search by name, ID, or clinical condition..."
@@ -141,7 +141,7 @@ export function PatientsPage() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 w-full sm:w-auto">
           <Button variant="outline" className="gap-2 rounded-xl border-border/60 h-12 px-4 bg-white">
             <Filter className="h-4 w-4" />
             Filters

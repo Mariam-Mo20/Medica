@@ -449,7 +449,7 @@ export function AppointmentsPage() {
                           </div>
                           <div>
                             <p className="text-sm font-medium text-foreground">{name}</p>
-                            <p className="text-xs text-muted-foreground">ID: #{apt.patient_id}</p>
+                            <p className="text-xs text-muted-foreground">{visitType(apt.reason)}</p>
                           </div>
                         </div>
                       </td>

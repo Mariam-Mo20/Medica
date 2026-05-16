@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 from sqlalchemy import select, func, and_, case
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 from app.models.patient import Patient
 from app.models.appointment import Appointment
 from app.models.doctor import Doctor
@@ -99,19 +100,29 @@ async def get_dashboard_stats(db: AsyncSession, tenant_id: int) -> DashboardStat
     ]
 
     recent_result = await db.execute(
-        select(Appointment).where(
+        select(Appointment)
+        .options(joinedload(Appointment.patient))
+        .where(
             Appointment.tenant_id == tenant_id,
             Appointment.scheduled_at >= today_start,
-        ).order_by(Appointment.scheduled_at).limit(10)
+            Appointment.scheduled_at <= today_end,
+        )
+        .order_by(Appointment.scheduled_at.desc())
+        .limit(10)
     )
     recent = recent_result.scalars().all()
     recent_appointments = [
         {
             "id": a.id,
             "patient_id": a.patient_id,
+            "patient_name": (
+                f"{a.patient.first_name} {a.patient.last_name}".strip()
+                if a.patient else None
+            ),
             "doctor_id": a.doctor_id,
             "scheduled_at": str(a.scheduled_at),
             "status": a.status,
+            "reason": a.reason,
         }
         for a in recent
     ]

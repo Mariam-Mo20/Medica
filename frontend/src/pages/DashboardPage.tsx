@@ -51,6 +51,13 @@ function getInitials(name: string): string {
     .slice(0, 2);
 }
 
+function visitType(reason?: string): string {
+  const r = (reason || "").toLowerCase();
+  if (r.includes("follow")) return "Follow-up";
+  if (r.includes("consult")) return "Consultation";
+  return "Consultation";
+}
+
 export function DashboardPage() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
@@ -223,9 +230,11 @@ export function DashboardPage() {
                ) : (
                 recentAppointments.slice(0, 5).map((apt) => {
                   const patientId = Number(apt.patient_id || 0);
-                  const name = `Patient #${patientId || "-"}`;
+                  const patientName = String(apt.patient_name || "").trim();
+                  const name = patientName || `Patient #${patientId || "-"}`;
                   const scheduledAt = String(apt.scheduled_at || "");
                   const status = String(apt.status || "scheduled");
+                  const reason = String(apt.reason || "");
                   const time = scheduledAt
                     ? new Date(scheduledAt).toLocaleTimeString([], {
                         hour: "2-digit",
@@ -243,7 +252,7 @@ export function DashboardPage() {
                         />
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-foreground truncate">{name}</p>
-                          <p className="text-xs text-muted-foreground">{time} · General</p>
+                          <p className="text-xs text-muted-foreground">{time} · {visitType(reason)}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">

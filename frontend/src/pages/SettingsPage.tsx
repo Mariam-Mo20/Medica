@@ -64,23 +64,23 @@ export function SettingsPage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8">
+    <div className="max-w-3xl mx-auto space-y-8">
       <div>
-        <h1 className="font-h1 text-h1 text-foreground">Settings</h1>
-        <p className="text-body-lg text-outline mt-1">Manage your clinic and account</p>
+        <h1 className="text-2xl font-bold text-foreground">Settings</h1>
+        <p className="text-sm text-muted-foreground mt-1">Manage your clinic and account preferences.</p>
       </div>
       {error && <div className="p-3 text-sm rounded-lg border border-red-200 bg-red-50 text-red-600">{error}</div>}
 
-      <Card>
-        <CardHeader>
+      <Card className="border-border shadow-sm rounded-xl">
+        <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">Clinic Information</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="clinic_name">Clinic Name</Label>
-            <div className="flex gap-2">
-              <Input id="clinic_name" value={clinicName} onChange={(e) => setClinicName(e.target.value)} className="flex-1" />
-              <Button onClick={saveClinic} disabled={saving}>
+            <Label htmlFor="clinic_name" className="text-sm font-medium">Clinic Name</Label>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Input id="clinic_name" value={clinicName} onChange={(e) => setClinicName(e.target.value)} className="flex-1 h-10 rounded-lg" />
+              <Button onClick={saveClinic} disabled={saving} className="h-10 rounded-lg">
                 <Save className="h-4 w-4 mr-1" />
                 {saving ? "Saving..." : "Save"}
               </Button>
@@ -94,28 +94,28 @@ export function SettingsPage() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
+      <Card className="border-border shadow-sm rounded-xl">
+        <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">Profile</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>Full Name</Label>
-            <Input value={profile.full_name} onChange={(e) => setProfile({ ...profile, full_name: e.target.value })} />
+            <Label className="text-sm font-medium">Full Name</Label>
+            <Input className="h-10 rounded-lg" value={profile.full_name} onChange={(e) => setProfile({ ...profile, full_name: e.target.value })} />
           </div>
           <div className="space-y-2">
-            <Label>Email</Label>
-            <Input value={profile.email} disabled className="bg-gray-50" />
+            <Label className="text-sm font-medium">Email</Label>
+            <Input value={profile.email} disabled className="h-10 rounded-lg bg-gray-50" />
           </div>
           <div className="space-y-2">
-            <Label>Role</Label>
+            <Label className="text-sm font-medium">Role</Label>
             <Select options={roleOptions} value={profile.role} onChange={(e) => setProfile({ ...profile, role: e.target.value })} />
           </div>
           <div className="space-y-2">
-            <Label>Phone</Label>
-            <Input value={profile.phone} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} />
+            <Label className="text-sm font-medium">Phone</Label>
+            <Input className="h-10 rounded-lg" value={profile.phone} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} />
           </div>
-          <Button onClick={saveProfile} disabled={saving}>
+          <Button onClick={saveProfile} disabled={saving} className="h-10 rounded-lg">
             <Save className="h-4 w-4 mr-1" />
             {saving ? "Saving..." : "Save Profile"}
           </Button>

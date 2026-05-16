@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
+import { isSameDayInTimezone } from "@/lib/date";
 import { Patient } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,12 +49,17 @@ export function PatientsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
+  const [newTodayCount, setNewTodayCount] = useState(0);
 
   useEffect(() => {
     setLoading(true);
     setError("");
     const run = async () => {
       try {
+        if (searchTerm.length < 2) {
+          const dashboard = await api.get<{ new_patients_today: number }>("/dashboard/");
+          setNewTodayCount(dashboard.new_patients_today || 0);
+        }
         if (searchTerm.length >= 2) {
           const results = await api.get<Patient[]>(`/patients/search?q=${encodeURIComponent(searchTerm)}`);
           setPatients(results);
@@ -70,8 +76,9 @@ export function PatientsPage() {
     run();
   }, [searchTerm]);
 
-  const todayStr = new Date().toISOString().slice(0, 10);
-  const newToday = patients.filter((p) => p.created_at?.startsWith(todayStr)).length;
+  const newToday = searchTerm.length >= 2
+    ? patients.filter((p) => isSameDayInTimezone(p.created_at)).length
+    : newTodayCount;
 
   const displayed = patients;
   const totalPages = Math.ceil(displayed.length / PAGE_SIZE);

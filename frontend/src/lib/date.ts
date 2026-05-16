@@ -72,3 +72,19 @@ export function daysAgo(value?: string | null): string {
   if (days === 1) return "1 day ago";
   return `${days} days ago`;
 }
+
+export function isSameDayInTimezone(value: string, timeZone = "Africa/Cairo"): boolean {
+  if (!value) return false;
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return false;
+
+  const fmt = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  const targetDay = fmt.format(d);
+  const today = fmt.format(new Date());
+  return targetDay === today;
+}

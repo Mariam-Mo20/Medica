@@ -206,7 +206,7 @@ export function Layout() {
               <button
                 type="button"
                 onClick={() => setSidebarCollapsed(true)}
-                className="hidden lg:flex items-center justify-center self-start -mt-1 text-muted-foreground hover:text-foreground transition-colors"
+                className="hidden lg:flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
                 title="Collapse sidebar"
               >
                 <PanelLeftClose className="h-4 w-4" />
@@ -239,21 +239,21 @@ export function Layout() {
           })}
         </nav>
 
-        <div className={cn("mt-auto pt-3 pb-3 border-t border-border space-y-0.5", sidebarCollapsed ? "px-2" : "px-2.5")}>
+        <div className={cn("mt-auto pt-2 pb-2 border-t border-border space-y-0.5", sidebarCollapsed ? "px-2" : "px-2.5")}>
           <Link
             to="/notifications"
             onClick={() => setSidebarOpen(false)}
             title={sidebarCollapsed ? "Notifications" : undefined}
             className={cn(
               "flex items-center rounded-lg transition-all duration-200 text-sm",
-              sidebarCollapsed ? "justify-center px-2 py-2.5" : "gap-3 px-2.5 py-2",
+              sidebarCollapsed ? "justify-center px-2 py-2.5 lg:py-2" : "gap-3 px-2.5 py-2 lg:py-1.5",
               location.pathname === "/notifications"
                 ? "bg-primary-container text-primary font-semibold"
                 : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
             )}
           >
             <div className="relative">
-              <BellDot className="h-4.5 w-4.5" />
+              <BellDot className="h-5 w-5 text-foreground/70" />
               {!isNotifsPage && unreadCount > 0 && (
                 <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-destructive text-destructive-foreground text-[8px] font-bold rounded-full flex items-center justify-center">
                   {unreadCount > 9 ? "9+" : unreadCount}
@@ -268,13 +268,13 @@ export function Layout() {
             title={sidebarCollapsed ? "Settings" : undefined}
             className={cn(
               "flex items-center rounded-lg transition-all duration-200 text-sm",
-              sidebarCollapsed ? "justify-center px-2 py-2.5" : "gap-3 px-2.5 py-2",
+              sidebarCollapsed ? "justify-center px-2 py-2.5 lg:py-2" : "gap-3 px-2.5 py-2 lg:py-1.5",
               location.pathname === "/settings"
                 ? "bg-primary-container text-primary font-semibold"
                 : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
             )}
           >
-            <Settings className="h-4.5 w-4.5" />
+            <Settings className="h-5 w-5 text-foreground/70" />
             {!sidebarCollapsed && "Settings"}
           </Link>
           <button
@@ -282,10 +282,10 @@ export function Layout() {
             title={sidebarCollapsed ? "Logout" : undefined}
             className={cn(
               "flex items-center w-full rounded-lg transition-all duration-200 text-sm text-muted-foreground hover:bg-red-50 hover:text-red-600",
-              sidebarCollapsed ? "justify-center px-2 py-2.5" : "gap-3 px-2.5 py-2"
+              sidebarCollapsed ? "justify-center px-2 py-2.5 lg:py-2" : "gap-3 px-2.5 py-2 lg:py-1.5"
             )}
           >
-            <LogOut className="h-4.5 w-4.5" />
+            <LogOut className="h-5 w-5 text-foreground/70" />
             {!sidebarCollapsed && "Logout"}
           </button>
         </div>

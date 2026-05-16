@@ -46,14 +46,28 @@ export function PatientsPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [page, setPage] = useState(1);
 
   useEffect(() => {
-    if (searchTerm.length >= 2) {
-      api.get<Patient[]>(`/patients/search?q=${encodeURIComponent(searchTerm)}`).then(setPatients);
-    } else {
-      api.get<Patient[]>("/patients/?limit=100").then(setPatients).finally(() => setLoading(false));
-    }
+    setLoading(true);
+    setError("");
+    const run = async () => {
+      try {
+        if (searchTerm.length >= 2) {
+          const results = await api.get<Patient[]>(`/patients/search?q=${encodeURIComponent(searchTerm)}`);
+          setPatients(results);
+        } else {
+          const results = await api.get<Patient[]>("/patients/?limit=100");
+          setPatients(results);
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load patients");
+      } finally {
+        setLoading(false);
+      }
+    };
+    run();
   }, [searchTerm]);
 
   const todayStr = new Date().toISOString().slice(0, 10);
@@ -133,6 +147,7 @@ export function PatientsPage() {
       </div>
 
       <div className="bg-white rounded-2xl border border-border/70 shadow-sm overflow-hidden">
+        {error && <div className="m-4 p-3 text-sm rounded-lg border border-red-200 bg-red-50 text-red-600">{error}</div>}
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -182,7 +197,7 @@ export function PatientsPage() {
                           <div>
                             <p className="text-sm font-medium text-foreground">{fullName}</p>
                             <p className="text-xs text-muted-foreground">
-                              {patient.gender === "male" ? "Male" : patient.gender === "female" ? "Female" : "—"}, {age ?? "—"} yrs
+                              {age ?? "-"} yrs
                             </p>
                           </div>
                         </div>

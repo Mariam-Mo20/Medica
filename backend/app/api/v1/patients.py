@@ -1,12 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import select, or_
+from sqlalchemy import select, or_, func
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import aliased
 from app.core.database import get_db
 from app.middleware.auth_middleware import get_current_user, require_role
 from app.middleware.tenant_middleware import get_current_tenant
 from app.models.tenant import Tenant
 from app.models.user import User
 from app.models.patient import Patient
+from app.models.appointment import Appointment
 from app.schemas.patient import PatientCreate, PatientUpdate, PatientResponse, PatientSearchResult
 from app.services.patient_service import generate_mrn
 
@@ -64,8 +66,36 @@ async def search_patients(
     tenant: Tenant = Depends(get_current_tenant),
 ):
     term = f"%{q}%"
+    latest_visit = (
+        select(
+            Appointment.patient_id.label("patient_id"),
+            func.max(Appointment.scheduled_at).label("last_visit_at"),
+        )
+        .where(Appointment.tenant_id == tenant.id)
+        .group_by(Appointment.patient_id)
+        .subquery()
+    )
+    latest_appointment = aliased(Appointment)
+
     result = await db.execute(
-        select(Patient).where(
+        select(
+            Patient.id,
+            Patient.medical_record_number,
+            Patient.first_name,
+            Patient.last_name,
+            Patient.phone,
+            Patient.date_of_birth,
+            latest_visit.c.last_visit_at,
+            latest_appointment.reason,
+        )
+        .outerjoin(latest_visit, latest_visit.c.patient_id == Patient.id)
+        .outerjoin(
+            latest_appointment,
+            (latest_appointment.patient_id == Patient.id)
+            & (latest_appointment.scheduled_at == latest_visit.c.last_visit_at)
+            & (latest_appointment.tenant_id == tenant.id),
+        )
+        .where(
             Patient.tenant_id == tenant.id,
             or_(
                 Patient.first_name.ilike(term),
@@ -73,9 +103,29 @@ async def search_patients(
                 Patient.medical_record_number.ilike(term),
                 Patient.phone.ilike(term),
             ),
-        ).limit(20)
+        )
+        .order_by(Patient.first_name.asc(), Patient.last_name.asc())
+        .limit(20)
     )
-    return result.scalars().all()
+
+    rows = result.all()
+    return [
+        PatientSearchResult(
+            id=row.id,
+            medical_record_number=row.medical_record_number,
+            first_name=row.first_name,
+            last_name=row.last_name,
+            phone=row.phone,
+            date_of_birth=row.date_of_birth,
+            last_visit_at=row.last_visit_at,
+            last_visit_type=(
+                "Follow-up"
+                if row.reason and "follow" in row.reason.lower()
+                else ("Consultation" if row.last_visit_at else None)
+            ),
+        )
+        for row in rows
+    ]
 
 
 @router.get("/{patient_id}", response_model=PatientResponse)

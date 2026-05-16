@@ -36,6 +36,17 @@ export interface Patient {
   updated_at: string;
 }
 
+export interface PatientSearchResult {
+  id: number;
+  medical_record_number: string;
+  first_name: string;
+  last_name: string;
+  phone?: string;
+  date_of_birth: string;
+  last_visit_at?: string | null;
+  last_visit_type?: string | null;
+}
+
 export interface Doctor {
   id: number;
   tenant_id: number;
@@ -145,5 +156,4 @@ export interface NotificationList {
   notifications: Notification[];
   unread_count: number;
 }
-
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
+import { formatDisplayDate, formatDisplayDateTime } from "@/lib/date";
 import { Patient, MedicalRecord, Prescription } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -149,7 +150,7 @@ export function PatientDetailPage() {
               <div>
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Last Visit</p>
                 <p className="text-foreground font-bold">
-                  {lastRecord?.created_at ? new Date(lastRecord.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
+                  {lastRecord?.created_at ? formatDisplayDate(lastRecord.created_at) : "—"}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {lastRecord?.created_at
@@ -189,7 +190,7 @@ export function PatientDetailPage() {
               <div>
                 <p className="text-xs text-muted-foreground font-bold uppercase">Date of Birth</p>
                 <p className="text-sm font-medium text-foreground">
-                  {new Date(patient.date_of_birth).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                  {formatDisplayDate(patient.date_of_birth)}
                 </p>
               </div>
               <div>
@@ -352,10 +353,7 @@ export function PatientDetailPage() {
                     <div className="p-5">
                       <div className="flex items-center justify-between mb-3">
                         <span className="text-xs text-muted-foreground">
-                          {record.created_at
-                            ? new Date(record.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) + " • " +
-                              new Date(record.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-                            : ""}
+                          {record.created_at ? formatDisplayDateTime(record.created_at) : ""}
                         </span>
                       </div>
                       <h4 className="text-base font-bold text-foreground mb-2">

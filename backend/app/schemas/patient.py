@@ -47,3 +47,5 @@ class PatientSearchResult(BaseModel):
     last_name: str
     phone: str | None
     date_of_birth: date
+    last_visit_at: datetime | None = None
+    last_visit_type: str | None = None

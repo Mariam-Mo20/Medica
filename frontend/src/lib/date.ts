@@ -37,3 +37,38 @@ export function formatISOToDisplay(value: string): string {
   const yyyy = d.getFullYear();
   return `${dd}/${mm}/${yyyy}`;
 }
+
+export function formatDisplayDate(value: string): string {
+  if (!value) return "-";
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return "-";
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yyyy = d.getFullYear();
+  return `${dd}/${mm}/${yyyy}`;
+}
+
+export function formatDisplayTime(value: string): string {
+  if (!value) return "-";
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return "-";
+  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+export function formatDisplayDateTime(value: string): string {
+  const date = formatDisplayDate(value);
+  const time = formatDisplayTime(value);
+  if (date === "-" || time === "-") return "-";
+  return `${date} ${time}`;
+}
+
+export function daysAgo(value?: string | null): string {
+  if (!value) return "No visits yet";
+  const d = new Date(value).getTime();
+  if (isNaN(d)) return "No visits yet";
+  const diff = Math.max(0, Date.now() - d);
+  const days = Math.floor(diff / 86400000);
+  if (days === 0) return "Today";
+  if (days === 1) return "1 day ago";
+  return `${days} days ago`;
+}

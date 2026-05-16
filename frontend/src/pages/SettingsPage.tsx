@@ -18,6 +18,7 @@ export function SettingsPage() {
   const [clinicName, setClinicName] = useState("");
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
   const [profile, setProfile] = useState({
     full_name: "", email: "", role: "", phone: "",
   });
@@ -36,15 +37,19 @@ export function SettingsPage() {
 
   const saveClinic = async () => {
     setSaving(true);
+    setError("");
     try {
       await api.put(`/tenants/${user?.tenant_id}`, { name: clinicName });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
-    } catch { /* ignore */ } finally { setSaving(false); }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save clinic settings");
+    } finally { setSaving(false); }
   };
 
   const saveProfile = async () => {
     setSaving(true);
+    setError("");
     try {
       await api.put(`/users/${user?.id}`, {
         full_name: profile.full_name,
@@ -53,7 +58,9 @@ export function SettingsPage() {
       });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
-    } catch { /* ignore */ } finally { setSaving(false); }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save profile");
+    } finally { setSaving(false); }
   };
 
   return (
@@ -62,6 +69,7 @@ export function SettingsPage() {
         <h1 className="font-h1 text-h1 text-foreground">Settings</h1>
         <p className="text-body-lg text-outline mt-1">Manage your clinic and account</p>
       </div>
+      {error && <div className="p-3 text-sm rounded-lg border border-red-200 bg-red-50 text-red-600">{error}</div>}
 
       <Card>
         <CardHeader>

@@ -88,7 +88,7 @@ export function DashboardPage() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground">{greeting}, {user?.full_name?.split(" ")[0] || "there"}!</h1>
-          <p className="text-sm text-muted-foreground mt-1">Here's your clinic overview for today</p>
+          <p className="text-sm text-muted-foreground mt-1">Here's your clinic overview</p>
         </div>
         <Button onClick={() => navigate("/appointments/new")} className="gap-2 rounded-lg h-10 shadow-sm">
           <Plus className="h-4 w-4" />
@@ -106,7 +106,7 @@ export function DashboardPage() {
                 <Users className="h-5 w-5" />
               </div>
             </div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Today Total Patients</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Patients</p>
             <p className="text-2xl font-bold text-foreground mt-1">{stats.patients_today}</p>
           </CardContent>
         </Card>
@@ -118,7 +118,7 @@ export function DashboardPage() {
                 <Calendar className="h-5 w-5" />
               </div>
             </div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">New Patients Today</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">New Patients</p>
             <p className="text-2xl font-bold text-foreground mt-1">{stats.new_patients_today}</p>
           </CardContent>
         </Card>
@@ -131,7 +131,7 @@ export function DashboardPage() {
               </div>
               <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-full">{stats.completed_appointments} completed</span>
             </div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Today's Appointments</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Appointments</p>
             <p className="text-2xl font-bold text-foreground mt-1">
               {stats.completed_appointments} / {stats.today_appointments}
             </p>

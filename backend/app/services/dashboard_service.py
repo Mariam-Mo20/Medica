@@ -1,16 +1,21 @@
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 from sqlalchemy import select, func, and_, case
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.patient import Patient
 from app.models.appointment import Appointment
 from app.models.doctor import Doctor
 from app.models.user import User
+from app.core.config import settings
 from app.schemas.dashboard import DashboardStats
 
 
 async def get_dashboard_stats(db: AsyncSession, tenant_id: int) -> DashboardStats:
-    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
-    today_end = today_start.replace(hour=23, minute=59, second=59, microsecond=999999)
+    clinic_now = datetime.now(ZoneInfo(settings.APP_TIMEZONE))
+    today_start_local = clinic_now.replace(hour=0, minute=0, second=0, microsecond=0)
+    today_end_local = clinic_now.replace(hour=23, minute=59, second=59, microsecond=999999)
+    today_start = today_start_local.astimezone(timezone.utc)
+    today_end = today_end_local.astimezone(timezone.utc)
 
     total_patients_result = await db.execute(
         select(func.count(Patient.id)).where(Patient.tenant_id == tenant_id)

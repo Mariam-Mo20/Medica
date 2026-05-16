@@ -6,6 +6,7 @@ class Settings(BaseSettings):
     APP_NAME: str = "Medica API"
     VERSION: str = "1.0.0"
     DEBUG: bool = False
+    APP_TIMEZONE: str = "Africa/Cairo"
 
     DATABASE_URL: str = "postgresql+asyncpg://postgres.varghgyjzqmtjbruknvg:Mariam30305200102363@aws-0-eu-west-1.pooler.supabase.com:5432/postgres?ssl=require"
     DATABASE_URL_SYNC: str = "postgresql://postgres.varghgyjzqmtjbruknvg:Mariam30305200102363@aws-0-eu-west-1.pooler.supabase.com:5432/postgres"

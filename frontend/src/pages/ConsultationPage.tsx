@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
+import { formatDisplayDateTime } from "@/lib/date";
 import { Appointment, MedicalRecord, Prescription } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -102,7 +103,7 @@ export function ConsultationPage() {
                 Patient: {appointment.patient_name || `#${appointment.patient_id}`} · Doctor: {appointment.doctor_name || (appointment.doctor_id ? `#${appointment.doctor_id}` : "—")}
               </p>
             </div>
-            <Badge>{new Date(appointment.scheduled_at).toLocaleDateString("en-GB")} {new Date(appointment.scheduled_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</Badge>
+            <Badge>{formatDisplayDateTime(appointment.scheduled_at)}</Badge>
           </div>
         </CardHeader>
         <CardContent>

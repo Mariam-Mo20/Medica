@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
+import { formatDisplayDate } from "@/lib/date";
 import { Patient, MedicalRecord, Prescription } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -85,7 +86,7 @@ export function AddVisitPage() {
             </div>
             <div>
               <p className="font-label-md">{patient.first_name} {patient.last_name}</p>
-              <p className="text-body-sm text-outline">{patient.medical_record_number} · DOB: {new Date(patient.date_of_birth).toLocaleDateString("en-GB")}</p>
+              <p className="text-body-sm text-outline">{patient.medical_record_number} · DOB: {formatDisplayDate(patient.date_of_birth)}</p>
             </div>
           </CardContent>
         </Card>

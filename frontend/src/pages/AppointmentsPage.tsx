@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
+import { formatDisplayDate, formatDisplayTime } from "@/lib/date";
 import { Appointment } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -67,10 +68,9 @@ function getAvatarColor(name: string): string {
 }
 
 function formatDate(dateStr: string) {
-  const d = new Date(dateStr);
   return {
-    date: d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
-    time: d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+    date: formatDisplayDate(dateStr),
+    time: formatDisplayTime(dateStr),
   };
 }
 

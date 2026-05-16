@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
 import { api } from "@/lib/api";
-import { Notification, NotificationList } from "@/types";
+import { Notification, NotificationList, PatientSearchResult } from "@/types";
 import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard,
@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getDisplayInitial } from "@/lib/name";
+import { daysAgo } from "@/lib/date";
 
 const navItems = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["doctor", "assistant"] },
@@ -33,9 +34,14 @@ export function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [toastNotification, setToastNotification] = useState<Notification | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [globalSearch, setGlobalSearch] = useState("");
+  const [searchResults, setSearchResults] = useState<PatientSearchResult[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState("");
   const lastProcessedId = useRef<number | null>(null);
   const initialized = useRef(false);
   const hiddenNotificationIds = useRef<Set<number>>(new Set());
+  const searchBoxRef = useRef<HTMLDivElement | null>(null);
 
   const fetchNotifications = () => {
     api.get<NotificationList>("/notifications/").then((data) => {
@@ -67,6 +73,42 @@ export function Layout() {
     const interval = setInterval(fetchNotifications, 15000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    const handleOutside = (e: MouseEvent) => {
+      if (!searchBoxRef.current) return;
+      if (!searchBoxRef.current.contains(e.target as Node)) {
+        setSearchResults([]);
+      }
+    };
+    document.addEventListener("mousedown", handleOutside);
+    return () => document.removeEventListener("mousedown", handleOutside);
+  }, []);
+
+  useEffect(() => {
+    const q = globalSearch.trim();
+    if (q.length < 2) {
+      setSearchResults([]);
+      setSearchError("");
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setSearchLoading(true);
+      setSearchError("");
+      try {
+        const results = await api.get<PatientSearchResult[]>(`/patients/search?q=${encodeURIComponent(q)}`);
+        setSearchResults(results);
+      } catch (err) {
+        setSearchResults([]);
+        setSearchError(err instanceof Error ? err.message : "Search failed");
+      } finally {
+        setSearchLoading(false);
+      }
+    }, 250);
+
+    return () => clearTimeout(timer);
+  }, [globalSearch]);
 
   const isNotifsPage = location.pathname === "/notifications";
 
@@ -171,11 +213,11 @@ export function Layout() {
             Notifications
           </Link>
           <Link
-            to="/administration"
+            to="/settings"
             onClick={() => setSidebarOpen(false)}
             className={cn(
               "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 text-sm",
-              location.pathname === "/administration"
+              location.pathname === "/settings"
                 ? "bg-primary-container text-primary font-semibold"
                 : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
             )}
@@ -204,13 +246,52 @@ export function Layout() {
             >
               {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
-            <div className="relative w-full max-w-lg hidden sm:block">
+            <div ref={searchBoxRef} className="relative w-full max-w-lg hidden sm:block">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
                 className="w-full bg-surface border border-border rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/15 focus:border-primary transition-all placeholder:text-muted-foreground"
-                placeholder="Search patients, charts, or records..."
+                placeholder="Search patients..."
                 type="text"
+                value={globalSearch}
+                onChange={(e) => setGlobalSearch(e.target.value)}
               />
+              {(searchLoading || searchError || searchResults.length > 0 || globalSearch.trim().length >= 2) && (
+                <div className="absolute top-12 left-0 right-0 bg-white border border-border rounded-xl shadow-lg overflow-hidden z-40">
+                  {searchLoading && <div className="px-4 py-3 text-sm text-muted-foreground">Searching...</div>}
+                  {!searchLoading && searchError && <div className="px-4 py-3 text-sm text-red-600">{searchError}</div>}
+                  {!searchLoading && !searchError && searchResults.length === 0 && (
+                    <div className="px-4 py-3 text-sm text-muted-foreground">No patients found</div>
+                  )}
+                  {!searchLoading && !searchError && searchResults.map((patient) => {
+                    const fullName = `${patient.first_name} ${patient.last_name}`;
+                    const visitType = patient.last_visit_type || "Consultation";
+                    return (
+                      <button
+                        key={patient.id}
+                        type="button"
+                        className="w-full text-left px-4 py-3 hover:bg-accent/60 transition-colors border-b border-border last:border-b-0"
+                        onClick={() => {
+                          setGlobalSearch("");
+                          setSearchResults([]);
+                          navigate(`/patients/${patient.id}`);
+                        }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={`https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=E8F0FE&color=0F4C81&size=64`}
+                            alt={fullName}
+                            className="w-9 h-9 rounded-full border border-border"
+                          />
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">{fullName}</p>
+                            <p className="text-xs text-muted-foreground">{daysAgo(patient.last_visit_at)} - {visitType}</p>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">

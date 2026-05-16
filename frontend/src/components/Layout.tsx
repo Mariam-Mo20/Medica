@@ -180,7 +180,17 @@ export function Layout() {
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className={cn("pt-5 pb-3", sidebarCollapsed ? "px-2" : "px-4")}>
+        <div className={cn("relative pt-5 pb-3", sidebarCollapsed ? "px-2" : "px-4")}>
+          {!sidebarCollapsed && (
+            <button
+              type="button"
+              onClick={() => setSidebarCollapsed(true)}
+              className="hidden lg:absolute lg:flex items-center justify-center -top-0.5 right-4 text-muted-foreground hover:text-foreground transition-colors"
+              title="Collapse sidebar"
+            >
+              <PanelLeftClose className="h-4 w-4" />
+            </button>
+          )}
           <div className={cn("flex items-center", sidebarCollapsed ? "justify-center" : "gap-3")}>
             <button
               type="button"
@@ -193,22 +203,12 @@ export function Layout() {
               <ClipboardList className="h-5 w-5" />
             </button>
             {!sidebarCollapsed && (
-              <>
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-base font-bold text-primary leading-none truncate">Medica</h2>
-                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mt-0.5 truncate max-w-[130px]">
-                    {user?.tenant_name || "Staff Portal"}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setSidebarCollapsed(true)}
-                  className="hidden lg:flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors shrink-0"
-                  title="Collapse sidebar"
-                >
-                  <PanelLeftClose className="h-4 w-4" />
-                </button>
-              </>
+              <div className="flex-1 min-w-0">
+                <h2 className="text-base font-bold text-primary leading-none truncate">Medica</h2>
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mt-0.5 truncate max-w-[130px]">
+                  {user?.tenant_name || "Staff Portal"}
+                </p>
+              </div>
             )}
           </div>
         </div>

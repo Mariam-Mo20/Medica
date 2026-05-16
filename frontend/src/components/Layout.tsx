@@ -180,23 +180,23 @@ export function Layout() {
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className={cn("pt-3 pb-3 lg:pt-2.5 lg:pb-2.5", sidebarCollapsed ? "px-2" : "px-3") }>
+        <div className={cn("pt-5 pb-3", sidebarCollapsed ? "px-2" : "px-4") }>
           <div className={cn("flex items-center", sidebarCollapsed ? "justify-center" : "justify-between gap-2") }>
-            <div className={cn("flex items-center", sidebarCollapsed ? "justify-center" : "gap-2") }>
+            <div className={cn("flex items-center", sidebarCollapsed ? "justify-center" : "gap-3") }>
               <button
                 type="button"
                 onClick={() => {
                   if (sidebarCollapsed) setSidebarCollapsed(false);
                 }}
-                className="w-8 h-8 lg:w-7 lg:h-7 bg-primary rounded-lg flex items-center justify-center text-white shadow-sm"
+                className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center text-white shadow-sm shrink-0"
                 title={sidebarCollapsed ? "Expand sidebar" : "Medica"}
               >
-              <ClipboardList className="h-5 w-5 lg:h-4 lg:w-4" />
+              <ClipboardList className="h-5 w-5" />
               </button>
               {!sidebarCollapsed && (
                 <div>
-                  <h2 className="text-sm lg:text-[13px] font-bold text-primary leading-none">Medica</h2>
-                  <p className="text-[9px] font-medium text-muted-foreground uppercase tracking-wider mt-0.5 truncate max-w-[120px]">
+                  <h2 className="text-base font-bold text-primary leading-none">Medica</h2>
+                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mt-0.5 truncate max-w-[130px]">
                     {user?.tenant_name || "Staff Portal"}
                   </p>
                 </div>
@@ -232,7 +232,7 @@ export function Layout() {
                     : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                 )}
               >
-                <item.icon className={cn("h-4.5 w-4.5", isActive ? "text-primary" : "")} />
+                <item.icon className={cn("h-5 w-5", isActive ? "text-primary" : "text-foreground/70")} />
                 {!sidebarCollapsed && item.label}
               </Link>
             );

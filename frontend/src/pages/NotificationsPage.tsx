@@ -89,11 +89,11 @@ export function NotificationsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 lg:space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-h1 text-h1 text-foreground">Notifications</h1>
-          <p className="text-body-lg text-outline mt-1">
+          <h1 className="text-lg lg:text-xl font-bold text-foreground">Notifications</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
             {unreadCount > 0
               ? `${unreadCount} unread notification${unreadCount > 1 ? "s" : ""}`
               : "No unread notifications"}

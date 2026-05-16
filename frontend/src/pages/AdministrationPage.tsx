@@ -105,10 +105,10 @@ export function AdministrationPage() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5 lg:space-y-4">
       <div>
-        <h1 className="font-h1 text-h1 text-foreground">Administration</h1>
-        <p className="text-body-lg text-outline mt-1">Manage users and invitations</p>
+        <h1 className="text-lg lg:text-xl font-bold text-foreground">Administration</h1>
+        <p className="text-xs sm:text-sm text-muted-foreground mt-1">Manage users and invitations</p>
       </div>
 
       {error && (

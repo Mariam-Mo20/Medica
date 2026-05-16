@@ -30,7 +30,7 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install -r backend/requirements.txt
-          pip install pytest pytest-asyncio aiosqlite httpx
+          pip install pytest pytest-asyncio aiosqlite httpx greenlet
 
       - name: Run tests
         working-directory: backend

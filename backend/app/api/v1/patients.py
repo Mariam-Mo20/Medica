@@ -3,6 +3,7 @@ from sqlalchemy import select, or_, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased, load_only
 from time import perf_counter
+from app.core.config import settings
 from app.core.database import get_db
 from app.middleware.auth_middleware import require_role
 from app.middleware.tenant_middleware import get_current_tenant
@@ -83,10 +84,11 @@ async def list_patients(
     serialize_ms = (perf_counter() - serialize_started_at) * 1000
 
     handler_ms = (perf_counter() - handler_started_at) * 1000
-    print(
-        f"[perf][patients] list query={query_ms:.1f}ms serialize={serialize_ms:.1f}ms "
-        f"handler={handler_ms:.1f}ms rows={len(payload)}"
-    )
+    if settings.DEBUG:
+        print(
+            f"[perf][patients] list query={query_ms:.1f}ms serialize={serialize_ms:.1f}ms "
+            f"handler={handler_ms:.1f}ms rows={len(payload)}"
+        )
 
     return payload
 

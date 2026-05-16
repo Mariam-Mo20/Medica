@@ -18,11 +18,15 @@ engine = create_async_engine(
 
 @event.listens_for(engine.sync_engine, "before_cursor_execute")
 def before_cursor_execute(conn, cursor, statement, parameters, context, executemany):
+    if not settings.DEBUG:
+        return
     conn.info.setdefault("query_start_time", []).append(perf_counter())
 
 
 @event.listens_for(engine.sync_engine, "after_cursor_execute")
 def after_cursor_execute(conn, cursor, statement, parameters, context, executemany):
+    if not settings.DEBUG:
+        return
     start_times = conn.info.get("query_start_time")
     if not start_times:
         return

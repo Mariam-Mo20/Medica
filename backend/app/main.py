@@ -111,11 +111,12 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 async def request_timing_middleware(request: Request, call_next):
     started_at = perf_counter()
     response = await call_next(request)
-    duration_ms = (perf_counter() - started_at) * 1000
-    path = request.url.path
-    method = request.method
-    if path.startswith("/api/") or path == "/health":
-        print(f"[perf][api] {method} {path} -> {response.status_code} in {duration_ms:.1f}ms")
+    if settings.DEBUG:
+        duration_ms = (perf_counter() - started_at) * 1000
+        path = request.url.path
+        method = request.method
+        if path.startswith("/api/") or path == "/health":
+            print(f"[perf][api] {method} {path} -> {response.status_code} in {duration_ms:.1f}ms")
     return response
 
 

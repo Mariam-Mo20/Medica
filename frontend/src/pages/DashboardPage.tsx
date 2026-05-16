@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
 import { DashboardStats } from "@/types";
@@ -14,15 +14,8 @@ import {
   Activity,
   CalendarCheck,
 } from "lucide-react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+
+const ChartSection = lazy(() => import("@/components/ChartSection").then((m) => ({ default: m.ChartSection })));
 
 const statusStyles: Record<string, string> = {
   completed: "bg-emerald-50 text-emerald-700",
@@ -197,25 +190,10 @@ export function DashboardPage() {
                 </div>
                 <div />
               </div>
-              {loading && !stats ? (
-                <div className="animate-pulse h-[220px] rounded-lg bg-gray-100" />
-              ) : chartData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={220}>
-                  <BarChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis dataKey="name" tick={{ fontSize: 12, fill: "#6b7280" }} />
-                    <YAxis tick={{ fontSize: 12, fill: "#6b7280" }} />
-                    <Tooltip
-                      contentStyle={{
-                        borderRadius: "8px",
-                        border: "1px solid #e5e7eb",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-                        fontSize: "13px",
-                      }}
-                    />
-                    <Bar dataKey="count" fill="#0f4c81" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+              {chartData.length > 0 ? (
+                <Suspense fallback={<div className="animate-pulse h-[220px] rounded-lg bg-gray-100" />}>
+                  <ChartSection data={chartData} />
+                </Suspense>
               ) : (
                  <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
                   <Activity className="h-8 w-8 mb-2" />

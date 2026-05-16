@@ -279,9 +279,8 @@ export function AppointmentsPage() {
       </div>
 
       <div className="bg-white border border-border rounded-xl shadow-sm overflow-hidden">
-        <div className="p-5 border-b border-border flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="flex bg-gray-100 rounded-lg p-0.5">
+        <div className="p-5 border-b border-border flex flex-wrap items-center justify-between gap-3">
+          <div className="flex bg-gray-100 rounded-lg p-0.5">
               <button
                 onClick={() => { setShowTodayOnly(true); setPage(1); }}
                 className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${showTodayOnly ? "bg-white text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
@@ -294,14 +293,15 @@ export function AppointmentsPage() {
               >
                 All
               </button>
-            </div>
+          </div>
+          <div className="w-full sm:w-auto sm:ml-auto">
             <select
               value={statusFilter}
               onChange={(e) => {
                 setStatusFilter(e.target.value);
                 setPage(1);
               }}
-              className="h-10 px-3 bg-white border border-border rounded-lg text-sm text-foreground cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary"
+              className="h-10 w-full sm:w-auto px-3 bg-white border border-border rounded-lg text-sm text-foreground cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary"
             >
               <option value="">All Statuses</option>
               {statusOptions

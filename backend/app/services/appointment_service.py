@@ -2,10 +2,6 @@ from datetime import datetime, timedelta
 from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.appointment import Appointment
-from app.models.doctor import Doctor
-from app.models.patient import Patient
-from app.models.user import User
-from app.schemas.appointment import AppointmentResponse
 
 
 async def check_conflict(
@@ -69,43 +65,3 @@ async def generate_series_instances(
         instances.append(inst)
 
     return instances
-
-
-async def appointment_to_response(appointment: Appointment, db: AsyncSession) -> AppointmentResponse:
-    resp = AppointmentResponse(
-        id=appointment.id,
-        tenant_id=appointment.tenant_id,
-        patient_id=appointment.patient_id,
-        doctor_id=appointment.doctor_id,
-        receptionist_id=appointment.receptionist_id,
-        scheduled_at=appointment.scheduled_at,
-        duration_minutes=appointment.duration_minutes,
-        status=appointment.status,
-        reason=appointment.reason,
-        notes=appointment.notes,
-        recurring_rule=appointment.recurring_rule,
-        recurring_end_date=appointment.recurring_end_date,
-        series_id=appointment.series_id,
-        is_series_cancelled=appointment.is_series_cancelled,
-        created_at=appointment.created_at,
-        updated_at=appointment.updated_at,
-    )
-
-    patient = None
-    if appointment.patient_id:
-        patient_result = await db.execute(select(Patient).where(Patient.id == appointment.patient_id))
-        patient = patient_result.scalar_one_or_none()
-    if patient:
-        resp.patient_name = f"{patient.first_name} {patient.last_name}"
-
-    doctor = None
-    if appointment.doctor_id:
-        doctor_result = await db.execute(select(Doctor).where(Doctor.id == appointment.doctor_id))
-        doctor = doctor_result.scalar_one_or_none()
-    if doctor:
-        user_result = await db.execute(select(User).where(User.id == doctor.user_id))
-        doctor_user = user_result.scalar_one_or_none()
-        if doctor_user:
-            resp.doctor_name = doctor_user.full_name
-
-    return resp

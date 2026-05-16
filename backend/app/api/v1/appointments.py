@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
 from app.core.database import get_db
 from app.middleware.auth_middleware import require_role
 from app.middleware.tenant_middleware import get_current_tenant
@@ -193,9 +192,7 @@ async def get_appointment(
     tenant: Tenant = Depends(get_current_tenant),
 ):
     result = await db.execute(
-        select(Appointment)
-        .options(joinedload(Appointment.patient), joinedload(Appointment.doctor).joinedload(Doctor.user))
-        .where(Appointment.id == appointment_id, Appointment.tenant_id == tenant.id)
+        select(Appointment).where(Appointment.id == appointment_id, Appointment.tenant_id == tenant.id)
     )
     appointment = result.scalar_one_or_none()
     if not appointment:
@@ -212,9 +209,7 @@ async def update_appointment(
     tenant: Tenant = Depends(get_current_tenant),
 ):
     result = await db.execute(
-        select(Appointment)
-        .options(joinedload(Appointment.patient), joinedload(Appointment.doctor).joinedload(Doctor.user))
-        .where(Appointment.id == appointment_id, Appointment.tenant_id == tenant.id)
+        select(Appointment).where(Appointment.id == appointment_id, Appointment.tenant_id == tenant.id)
     )
     appointment = result.scalar_one_or_none()
     if not appointment:
@@ -232,7 +227,6 @@ async def update_appointment(
         setattr(appointment, field, value)
 
     await db.flush()
-    await db.refresh(appointment)
     return await _fetch_appointment_response_by_id(db, appointment.id, tenant.id)
 
 
@@ -258,7 +252,6 @@ async def update_appointment_status(
 
     appointment.status = data.status
     await db.flush()
-    await db.refresh(appointment)
     return await _fetch_appointment_response_by_id(db, appointment.id, tenant.id)
 
 

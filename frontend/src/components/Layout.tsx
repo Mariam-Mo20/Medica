@@ -195,7 +195,7 @@ export function Layout() {
               {!sidebarCollapsed && (
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <h2 className="text-base font-bold text-primary leading-none truncate">Medica</h2>
+                    <h2 className="text-base font-bold text-primary leading-none truncate pt-0.5">Medica</h2>
                     <div className="flex-1" />
                     <button
                       type="button"
@@ -298,7 +298,7 @@ export function Layout() {
             >
               {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
-            <span className="text-sm font-bold text-primary truncate shrink-0 hidden sm:block max-w-[160px]">{user?.tenant_name || ""}</span>
+            <span className="text-base font-bold text-primary truncate shrink-0 hidden sm:block max-w-[180px]">{user?.tenant_name || ""}</span>
             <div ref={searchBoxRef} className="relative w-full max-w-lg hidden sm:block">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input

@@ -101,24 +101,24 @@ export function NotificationsPage() {
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <BellDot className="h-5 w-5" />
+      <Card className="border-border/70 shadow-sm rounded-xl">
+        <CardHeader className="p-4 lg:p-3 pb-2 lg:pb-2">
+          <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+            <BellDot className="h-4 w-4" />
             All Notifications
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           {loading ? (
-            <div className="p-8 text-center text-muted-foreground">Loading...</div>
+            <div className="py-8 text-center text-sm text-muted-foreground">Loading...</div>
           ) : notifications.length === 0 ? (
-            <div className="p-8 text-center text-muted-foreground">No notifications yet</div>
+            <div className="py-8 text-center text-sm text-muted-foreground">No notifications yet</div>
           ) : (
-            <div className="divide-y divide-border">
+            <div className="divide-y divide-border/50">
               {notifications.map((n) => (
                 <div
                   key={n.id}
-                  className={`flex items-center gap-4 px-6 py-4 transition-colors ${
+                  className={`flex items-center gap-3 px-5 lg:px-4 py-3 lg:py-2.5 transition-colors ${
                     !n.is_read ? "bg-primary-container/20" : "hover:bg-accent/50"
                   }`}
                 >
@@ -154,7 +154,7 @@ export function NotificationsPage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleViewProfile(n)}
-                        className="h-8 text-xs gap-1"
+                        className="h-7 text-xs gap-1 px-2"
                       >
                         <ExternalLink className="h-3 w-3" />
                         View
@@ -165,7 +165,7 @@ export function NotificationsPage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleMarkRead(n.id)}
-                        className="h-8 text-xs gap-1"
+                        className="h-7 text-xs gap-1 px-2"
                       >
                         <Check className="h-3 w-3" />
                         Read

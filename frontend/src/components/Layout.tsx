@@ -180,37 +180,35 @@ export function Layout() {
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className={cn("pt-5 pb-3", sidebarCollapsed ? "px-2" : "px-4") }>
-          <div className={cn("flex items-center", sidebarCollapsed ? "justify-center" : "justify-between gap-2") }>
-            <div className={cn("flex items-center", sidebarCollapsed ? "justify-center" : "gap-3") }>
-              <button
-                type="button"
-                onClick={() => {
-                  if (sidebarCollapsed) setSidebarCollapsed(false);
-                }}
-                className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center text-white shadow-sm shrink-0"
-                title={sidebarCollapsed ? "Expand sidebar" : "Medica"}
-              >
+        <div className={cn("pt-5 pb-3", sidebarCollapsed ? "px-2" : "px-4")}>
+          <div className={cn("flex items-center", sidebarCollapsed ? "justify-center" : "gap-3")}>
+            <button
+              type="button"
+              onClick={() => {
+                if (sidebarCollapsed) setSidebarCollapsed(false);
+              }}
+              className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center text-white shadow-sm shrink-0"
+              title={sidebarCollapsed ? "Expand sidebar" : "Medica"}
+            >
               <ClipboardList className="h-5 w-5" />
-              </button>
-              {!sidebarCollapsed && (
-                <div>
-                  <h2 className="text-base font-bold text-primary leading-none">Medica</h2>
+            </button>
+            {!sidebarCollapsed && (
+              <>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-base font-bold text-primary leading-none truncate">Medica</h2>
                   <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mt-0.5 truncate max-w-[130px]">
                     {user?.tenant_name || "Staff Portal"}
                   </p>
                 </div>
-              )}
-            </div>
-            {!sidebarCollapsed && (
-              <button
-                type="button"
-                onClick={() => setSidebarCollapsed(true)}
-                className="hidden lg:flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
-                title="Collapse sidebar"
-              >
-                <PanelLeftClose className="h-4 w-4" />
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setSidebarCollapsed(true)}
+                  className="hidden lg:flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                  title="Collapse sidebar"
+                >
+                  <PanelLeftClose className="h-4 w-4" />
+                </button>
+              </>
             )}
           </div>
         </div>

@@ -24,3 +24,11 @@ class PrescriptionResponse(BaseModel):
     doctor_name: str | None = None
 
     model_config = {"from_attributes": True}
+
+
+class PrescriptionUpdate(BaseModel):
+    medication_name: str | None = None
+    dosage: str | None = None
+    frequency: str | None = None
+    duration: str | None = None
+    instructions: str | None = None

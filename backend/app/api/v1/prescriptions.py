@@ -10,7 +10,7 @@ from app.models.user import User
 from app.models.doctor import Doctor
 from app.models.medical_record import MedicalRecord
 from app.models.prescription import Prescription
-from app.schemas.prescription import PrescriptionCreate, PrescriptionResponse
+from app.schemas.prescription import PrescriptionCreate, PrescriptionResponse, PrescriptionUpdate
 
 router = APIRouter()
 
@@ -84,3 +84,31 @@ async def get_prescriptions(
             resp.doctor_name = p.doctor.user.full_name
         output.append(resp)
     return output
+
+
+@router.put("/{prescription_id}", response_model=PrescriptionResponse)
+async def update_prescription(
+    prescription_id: int,
+    data: PrescriptionUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role("doctor", "assistant")),
+    tenant: Tenant = Depends(get_current_tenant),
+):
+    result = await db.execute(
+        select(Prescription)
+        .options(joinedload(Prescription.doctor).joinedload(Doctor.user))
+        .where(Prescription.id == prescription_id, Prescription.tenant_id == tenant.id)
+    )
+    prescription = result.scalar_one_or_none()
+    if not prescription:
+        raise HTTPException(status_code=404, detail="Prescription not found")
+
+    for field, value in data.model_dump(exclude_unset=True).items():
+        setattr(prescription, field, value)
+
+    await db.flush()
+
+    resp = PrescriptionResponse.model_validate(prescription)
+    if prescription.doctor and prescription.doctor.user:
+        resp.doctor_name = prescription.doctor.user.full_name
+    return resp

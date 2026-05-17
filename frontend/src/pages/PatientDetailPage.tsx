@@ -8,11 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Calendar, Phone, FileText, Pill, Save, Plus, Trash2, Stethoscope, AlertCircle } from "lucide-react";
+import { ArrowLeft, Calendar, FileText, Save, Plus, Trash2, Stethoscope, AlertCircle, Eye, Printer } from "lucide-react";
 
 interface PrescriptionForm {
+  id?: number;
   medication_name: string;
   dosage: string;
+  frequency: string;
 }
 
 export function PatientDetailPage() {
@@ -30,6 +32,12 @@ export function PatientDetailPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [showConsultForm, setShowConsultForm] = useState(false);
+  const [expandedVisits, setExpandedVisits] = useState<Record<number, boolean>>({});
+  const [editingRecordId, setEditingRecordId] = useState<number | null>(null);
+  const [editDiagnosis, setEditDiagnosis] = useState("");
+  const [editSymptoms, setEditSymptoms] = useState("");
+  const [editVisitNotes, setEditVisitNotes] = useState("");
+  const [editRxForms, setEditRxForms] = useState<PrescriptionForm[]>([]);
 
   useEffect(() => {
     if (!id) return;
@@ -52,7 +60,7 @@ export function PatientDetailPage() {
   }, [records]);
 
   const addRx = () =>
-    setRxForms([...rxForms, { medication_name: "", dosage: "" }]);
+    setRxForms([...rxForms, { medication_name: "", dosage: "", frequency: "" }]);
   const removeRx = (idx: number) => setRxForms(rxForms.filter((_, i) => i !== idx));
   const updateRx = (idx: number, field: keyof PrescriptionForm, value: string) => {
     const u = [...rxForms];
@@ -73,7 +81,11 @@ export function PatientDetailPage() {
       });
       if (rxForms.length > 0) {
         await api.post<Prescription[]>(`/prescriptions/medical-record/${rec.id}`,
-          rxForms.map((rx) => ({ ...rx, frequency: rx.dosage ? "As directed" : "As needed" }))
+          rxForms.map((rx) => ({
+            medication_name: rx.medication_name,
+            dosage: rx.dosage,
+            frequency: rx.frequency,
+          }))
         );
       }
       setDiagnosis("");
@@ -88,6 +100,98 @@ export function PatientDetailPage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const toggleVisit = (recordId: number) => {
+    const opening = !expandedVisits[recordId];
+    if (!opening) {
+      setExpandedVisits((prev) => ({ ...prev, [recordId]: false }));
+      if (editingRecordId === recordId) cancelEditVisit();
+      return;
+    }
+
+    const record = records.find((r) => r.id === recordId);
+    if (record) {
+      setEditingRecordId(record.id);
+      setEditDiagnosis(record.diagnosis || "");
+      setEditSymptoms(record.symptoms || "");
+      setEditVisitNotes(record.visit_notes || "");
+      setEditRxForms(
+        prescriptions
+          .filter((p) => p.medical_record_id === record.id)
+          .map((p) => ({ id: p.id, medication_name: p.medication_name, dosage: p.dosage, frequency: p.frequency })),
+      );
+    }
+    setExpandedVisits((prev) => ({ ...prev, [recordId]: true }));
+  };
+
+  const cancelEditVisit = () => {
+    setEditingRecordId(null);
+    setEditDiagnosis("");
+    setEditSymptoms("");
+    setEditVisitNotes("");
+    setEditRxForms([]);
+  };
+
+  const updateEditRx = (idx: number, field: keyof PrescriptionForm, value: string) => {
+    const next = [...editRxForms];
+    next[idx] = { ...next[idx], [field]: value };
+    setEditRxForms(next);
+  };
+
+  const saveVisitEdit = async (recordId: number) => {
+    setSaving(true);
+    setError("");
+    try {
+      await api.put<MedicalRecord>(`/medical-records/${recordId}`, {
+        diagnosis: editDiagnosis,
+        symptoms: editSymptoms,
+        visit_notes: editVisitNotes,
+      });
+      await Promise.all(
+        editRxForms
+          .filter((rx) => rx.id)
+          .map((rx) =>
+            api.put(`/prescriptions/${rx.id}`, {
+              medication_name: rx.medication_name,
+              dosage: rx.dosage,
+              frequency: rx.frequency,
+            }),
+          ),
+      );
+      const updated = await api.get<MedicalRecord[]>(`/medical-records/patient/${id}`);
+      setRecords(updated);
+      const updatedRx = await Promise.all(
+        updated.map((r) => api.get<Prescription[]>(`/prescriptions/medical-record/${r.id}`).catch(() => [] as Prescription[])),
+      );
+      setPrescriptions(updatedRx.flat());
+      cancelEditVisit();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update visit");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const printPrescription = (record: MedicalRecord) => {
+    const meds = prescriptions.filter((p) => p.medical_record_id === record.id);
+    if (meds.length === 0) return;
+
+    const w = window.open("", "_blank", "width=900,height=700");
+    if (!w) return;
+
+    const visitDate = record.created_at ? formatDisplayDateTime(record.created_at) : "";
+    const body = meds
+      .map(
+        (p, idx) =>
+          `<tr><td>${idx + 1}</td><td>${p.medication_name}</td><td>${p.dosage || "-"}</td><td>${p.frequency || "-"}</td></tr>`,
+      )
+      .join("");
+
+    w.document.write(`<!doctype html><html><head><title>Prescription - ${fullName}</title><style>body{font-family:Arial,sans-serif;padding:24px;color:#1f2937}h1{margin:0 0 8px}p{margin:4px 0}table{width:100%;border-collapse:collapse;margin-top:16px}th,td{border:1px solid #d1d5db;padding:8px;text-align:left}th{background:#f3f4f6}.muted{color:#6b7280;font-size:12px}</style></head><body><h1>Prescription</h1><p><strong>Patient:</strong> ${fullName}</p><p><strong>MRN:</strong> ${patient.medical_record_number}</p><p><strong>Visit Date:</strong> ${visitDate}</p><p><strong>Doctor:</strong> ${record.doctor_name || "-"}</p><table><thead><tr><th>#</th><th>Medication</th><th>Dosage</th><th>Frequency</th></tr></thead><tbody>${body}</tbody></table><p class="muted">Generated from Medica</p></body></html>`);
+    w.document.close();
+    w.focus();
+    w.print();
   };
 
   if (loading || !patient) {
@@ -123,7 +227,6 @@ export function PatientDetailPage() {
             <div>
               <div className="flex items-center gap-3">
                 <h2 className="text-2xl font-bold text-foreground">{fullName}</h2>
-                <span className="px-2 py-0.5 bg-muted text-muted-foreground rounded text-xs font-semibold uppercase">ID: {patient.medical_record_number}</span>
               </div>
               <p className="text-muted-foreground mt-1 text-sm">
                 {age ?? "—"} Years Old {patient.gender ? `• ${patient.gender === "male" ? "Male" : patient.gender === "female" ? "Female" : patient.gender}` : ""}
@@ -271,21 +374,21 @@ export function PatientDetailPage() {
                     </div>
                   )}
                   <div className="space-y-2">
-                    <Label className="text-xs font-medium">Symptoms</Label>
-                    <textarea
-                      className="flex min-h-[70px] w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary"
-                      value={symptoms}
-                      onChange={(e) => setSymptoms(e.target.value)}
-                      placeholder="Describe patient symptoms..."
-                    />
-                  </div>
-                  <div className="space-y-2">
                     <Label className="text-xs font-medium">Diagnosis</Label>
                     <textarea
                       className="flex min-h-[70px] w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary"
                       value={diagnosis}
                       onChange={(e) => setDiagnosis(e.target.value)}
                       placeholder="Enter diagnosis..."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium">Symptoms</Label>
+                    <textarea
+                      className="flex min-h-[70px] w-full rounded-lg border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary"
+                      value={symptoms}
+                      onChange={(e) => setSymptoms(e.target.value)}
+                      placeholder="Describe patient symptoms..."
                     />
                   </div>
                   <div className="space-y-2">
@@ -318,7 +421,10 @@ export function PatientDetailPage() {
                         </div>
                         <div className="grid gap-2 md:grid-cols-2">
                           <Input value={pf.medication_name} onChange={(e) => updateRx(idx, "medication_name", e.target.value)} placeholder="Medication name *" className="h-9 text-sm border-border rounded-lg" required />
-                          <Input value={pf.dosage} onChange={(e) => updateRx(idx, "dosage", e.target.value)} placeholder="Dosage (optional)" className="h-9 text-sm border-border rounded-lg" />
+                          <div className="space-y-2">
+                            <Input value={pf.dosage} onChange={(e) => updateRx(idx, "dosage", e.target.value)} placeholder="Dosage *" className="h-9 text-sm border-border rounded-lg" required />
+                            <Input value={pf.frequency} onChange={(e) => updateRx(idx, "frequency", e.target.value)} placeholder="Frequency *" className="h-9 text-sm border-border rounded-lg" required />
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -355,6 +461,18 @@ export function PatientDetailPage() {
                         <span className="text-xs text-muted-foreground">
                           {record.created_at ? formatDisplayDateTime(record.created_at) : ""}
                         </span>
+                        <div className="flex items-center gap-2">
+                          <Button type="button" variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={() => toggleVisit(record.id)}>
+                            <Eye className="h-3 w-3 mr-1" />
+                            {expandedVisits[record.id] ? "Hide Visit" : "View Visit"}
+                          </Button>
+                          {prescriptions.filter((p) => p.medical_record_id === record.id).length > 0 && (
+                            <Button type="button" variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={() => printPrescription(record)}>
+                              <Printer className="h-3 w-3 mr-1" />
+                              Print Prescription
+                            </Button>
+                          )}
+                        </div>
                       </div>
                       <h4 className="text-base font-bold text-foreground mb-2">
                         {record.diagnosis || "Medical Visit"}
@@ -364,6 +482,66 @@ export function PatientDetailPage() {
                       )}
                       {record.visit_notes && !record.symptoms && (
                         <p className="text-sm text-muted-foreground leading-relaxed">{record.visit_notes}</p>
+                      )}
+                      {expandedVisits[record.id] && (
+                        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                          <div className="rounded-lg border border-border bg-muted/20 p-3">
+                            <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Symptoms</p>
+                            {editingRecordId === record.id ? (
+                              <textarea className="mt-1 w-full rounded-md border border-border bg-white px-2 py-1.5 text-sm" value={editSymptoms} onChange={(e) => setEditSymptoms(e.target.value)} />
+                            ) : (
+                              <p className="mt-1 text-sm text-foreground whitespace-pre-wrap">{record.symptoms || "-"}</p>
+                            )}
+                          </div>
+                          <div className="rounded-lg border border-border bg-muted/20 p-3">
+                            <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Visit Notes</p>
+                            {editingRecordId === record.id ? (
+                              <textarea className="mt-1 w-full rounded-md border border-border bg-white px-2 py-1.5 text-sm" value={editVisitNotes} onChange={(e) => setEditVisitNotes(e.target.value)} />
+                            ) : (
+                              <p className="mt-1 text-sm text-foreground whitespace-pre-wrap">{record.visit_notes || "-"}</p>
+                            )}
+                          </div>
+                          <div className="rounded-lg border border-border bg-muted/20 p-3 sm:col-span-2">
+                            <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Medication</p>
+                            {prescriptions.filter((p) => p.medical_record_id === record.id).length === 0 ? (
+                              <p className="mt-1 text-sm text-muted-foreground">No medication prescribed</p>
+                            ) : editingRecordId === record.id ? (
+                              <div className="mt-1 space-y-2">
+                                {editRxForms.map((rx, rxIdx) => (
+                                  <div key={`edit-rx-${rx.id || rxIdx}`} className="grid gap-2 md:grid-cols-2">
+                                    <Input value={rx.medication_name} onChange={(e) => updateEditRx(rxIdx, "medication_name", e.target.value)} placeholder="Medication" className="h-8 text-sm" />
+                                    <div className="space-y-2">
+                                      <Input value={rx.dosage} onChange={(e) => updateEditRx(rxIdx, "dosage", e.target.value)} placeholder="Dosage" className="h-8 text-sm" />
+                                      <Input value={rx.frequency} onChange={(e) => updateEditRx(rxIdx, "frequency", e.target.value)} placeholder="Frequency" className="h-8 text-sm" />
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <ul className="mt-1 space-y-1">
+                                {prescriptions
+                                  .filter((p) => p.medical_record_id === record.id)
+                                  .map((p) => (
+                                    <li key={`expanded-${p.id}`} className="text-sm text-foreground">
+                                      <div className="font-medium">{p.medication_name}</div>
+                                      <div className="text-xs text-muted-foreground">{p.dosage || "-"}</div>
+                                      <div className="text-xs text-muted-foreground">{p.frequency || "-"}</div>
+                                    </li>
+                                  ))}
+                              </ul>
+                            )}
+                          </div>
+                          {editingRecordId === record.id && (
+                            <div className="rounded-lg border border-border bg-muted/20 p-3 sm:col-span-2">
+                              <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Diagnosis</p>
+                              <textarea className="mt-1 w-full rounded-md border border-border bg-white px-2 py-1.5 text-sm" value={editDiagnosis} onChange={(e) => setEditDiagnosis(e.target.value)} />
+                              <div className="mt-3 flex gap-2 justify-end">
+                                <Button type="button" variant="outline" size="sm" onClick={cancelEditVisit}>Cancel</Button>
+                                <Button type="button" size="sm" onClick={() => saveVisitEdit(record.id)} disabled={saving}>Save</Button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       )}
                     </div>
                     {(record.diagnosis || prescriptions.filter((p) => p.medical_record_id === record.id).length > 0) && (

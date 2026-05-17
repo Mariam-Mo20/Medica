@@ -15,6 +15,7 @@ interface PrescriptionForm {
   medication_name: string;
   dosage: string;
   frequency: string;
+  saved?: boolean;
 }
 
 export function PatientDetailPage() {
@@ -60,12 +61,23 @@ export function PatientDetailPage() {
   }, [records]);
 
   const addRx = () =>
-    setRxForms([...rxForms, { medication_name: "", dosage: "", frequency: "" }]);
+    setRxForms([...rxForms, { medication_name: "", dosage: "", frequency: "", saved: false }]);
   const removeRx = (idx: number) => setRxForms(rxForms.filter((_, i) => i !== idx));
   const updateRx = (idx: number, field: keyof PrescriptionForm, value: string) => {
     const u = [...rxForms];
-    u[idx] = { ...u[idx], [field]: value };
+    u[idx] = { ...u[idx], [field]: value, saved: false };
     setRxForms(u);
+  };
+
+  const saveRxDraft = (idx: number) => {
+    const u = [...rxForms];
+    if (!u[idx].medication_name.trim()) {
+      setError("Medication name is required before saving medication");
+      return;
+    }
+    u[idx] = { ...u[idx], saved: true };
+    setRxForms(u);
+    setError("");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -79,9 +91,10 @@ export function PatientDetailPage() {
         symptoms,
         visit_notes: visitNotes,
       });
-      if (rxForms.length > 0) {
+      const medsToSubmit = rxForms.filter((rx) => rx.medication_name.trim().length > 0);
+      if (medsToSubmit.length > 0) {
         await api.post<Prescription[]>(`/prescriptions/medical-record/${rec.id}`,
-          rxForms.map((rx) => ({
+          medsToSubmit.map((rx) => ({
             medication_name: rx.medication_name,
             dosage: rx.dosage,
             frequency: rx.frequency,
@@ -420,10 +433,21 @@ export function PatientDetailPage() {
                           </button>
                         </div>
                         <div className="grid gap-2 md:grid-cols-2">
-                          <Input value={pf.medication_name} onChange={(e) => updateRx(idx, "medication_name", e.target.value)} placeholder="Medication name *" className="h-9 text-sm border-border rounded-lg" required />
+                          <Input value={pf.medication_name} onChange={(e) => updateRx(idx, "medication_name", e.target.value)} placeholder="Medication name *" className="h-9 text-sm border-border rounded-lg" required disabled={pf.saved} />
                           <div className="space-y-2">
-                            <Input value={pf.dosage} onChange={(e) => updateRx(idx, "dosage", e.target.value)} placeholder="Dosage *" className="h-9 text-sm border-border rounded-lg" required />
-                            <Input value={pf.frequency} onChange={(e) => updateRx(idx, "frequency", e.target.value)} placeholder="Frequency *" className="h-9 text-sm border-border rounded-lg" required />
+                            <Input value={pf.dosage} onChange={(e) => updateRx(idx, "dosage", e.target.value)} placeholder="Dosage (optional)" className="h-9 text-sm border-border rounded-lg" disabled={pf.saved} />
+                            <Input value={pf.frequency} onChange={(e) => updateRx(idx, "frequency", e.target.value)} placeholder="Frequency (optional)" className="h-9 text-sm border-border rounded-lg" disabled={pf.saved} />
+                            <div className="flex justify-end gap-2">
+                              {pf.saved ? (
+                                <Button type="button" size="sm" variant="outline" className="h-7 text-xs" onClick={() => updateRx(idx, "medication_name", pf.medication_name)}>
+                                  Edit Medication
+                                </Button>
+                              ) : (
+                                <Button type="button" size="sm" variant="outline" className="h-7 text-xs" onClick={() => saveRxDraft(idx)}>
+                                  Save Medication
+                                </Button>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>

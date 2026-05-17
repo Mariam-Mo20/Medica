@@ -6,9 +6,7 @@ import { Appointment, MedicalRecord, Prescription } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Save, Plus, Trash2, FileText, Pill } from "lucide-react";
 
@@ -24,8 +22,6 @@ export function ConsultationPage() {
   const { appointmentId } = useParams<{ appointmentId: string }>();
   const navigate = useNavigate();
   const [appointment, setAppointment] = useState<Appointment | null>(null);
-  const [record, setRecord] = useState<MedicalRecord | null>(null);
-  const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
   const [diagnosis, setDiagnosis] = useState("");
   const [symptoms, setSymptoms] = useState("");
   const [visitNotes, setVisitNotes] = useState("");
@@ -36,9 +32,6 @@ export function ConsultationPage() {
   useEffect(() => {
     if (!appointmentId) return;
     api.get<Appointment>(`/appointments/${appointmentId}`).then(setAppointment);
-    if (appointment) {
-      api.get<MedicalRecord[]>(`/medical-records/patient/${appointment.patient_id}`).catch(() => {});
-    }
   }, [appointmentId]);
 
   const addPrescriptionForm = () => {
@@ -69,7 +62,6 @@ export function ConsultationPage() {
         symptoms,
         visit_notes: visitNotes,
       });
-      setRecord(rec);
 
       if (prescriptionForms.length > 0) {
         await api.post<Prescription[]>(`/prescriptions/medical-record/${rec.id}`, prescriptionForms);

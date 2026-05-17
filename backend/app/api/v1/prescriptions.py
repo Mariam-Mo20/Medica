@@ -4,7 +4,7 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from app.core.database import get_db
-from app.middleware.auth_middleware import get_current_user, require_role
+from app.middleware.auth_middleware import require_role
 from app.middleware.tenant_middleware import get_current_tenant
 from app.models.tenant import Tenant
 from app.models.user import User
@@ -19,6 +19,13 @@ router = APIRouter()
 class MedicationSuggestionResponse(BaseModel):
     medication_name: str
     usage_count: int
+
+
+def _to_prescription_response(prescription: Prescription) -> PrescriptionResponse:
+    response = PrescriptionResponse.model_validate(prescription)
+    if prescription.doctor and prescription.doctor.user:
+        response.doctor_name = prescription.doctor.user.full_name
+    return response
 
 
 @router.post("/medical-record/{record_id}", response_model=list[PrescriptionResponse], status_code=201)
@@ -60,13 +67,13 @@ async def add_prescriptions(
 
     await db.flush()
 
-    result = []
-    for p in created:
-        resp = PrescriptionResponse.model_validate(p)
+    responses = []
+    for created_prescription in created:
+        response = PrescriptionResponse.model_validate(created_prescription)
         if doctor:
-            resp.doctor_name = current_user.full_name
-        result.append(resp)
-    return result
+            response.doctor_name = current_user.full_name
+        responses.append(response)
+    return responses
 
 
 @router.get("/medical-record/{record_id}", response_model=list[PrescriptionResponse])
@@ -83,13 +90,7 @@ async def get_prescriptions(
         .order_by(Prescription.created_at.desc())
     )
     prescriptions = result.scalars().unique().all()
-    output = []
-    for p in prescriptions:
-        resp = PrescriptionResponse.model_validate(p)
-        if p.doctor and p.doctor.user:
-            resp.doctor_name = p.doctor.user.full_name
-        output.append(resp)
-    return output
+    return [_to_prescription_response(prescription) for prescription in prescriptions]
 
 
 @router.get("/suggestions", response_model=list[MedicationSuggestionResponse])
@@ -97,7 +98,7 @@ async def get_medication_suggestions(
     q: str = Query(min_length=1),
     limit: int = Query(8, ge=1, le=20),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role("doctor", "assistant")),
+    _current_user: User = Depends(require_role("doctor", "assistant")),
     tenant: Tenant = Depends(get_current_tenant),
 ):
     term = f"%{q.strip()}%"
@@ -146,7 +147,4 @@ async def update_prescription(
 
     await db.flush()
 
-    resp = PrescriptionResponse.model_validate(prescription)
-    if prescription.doctor and prescription.doctor.user:
-        resp.doctor_name = prescription.doctor.user.full_name
-    return resp
+    return _to_prescription_response(prescription)

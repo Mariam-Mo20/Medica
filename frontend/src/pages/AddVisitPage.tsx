@@ -47,9 +47,9 @@ export function AddVisitPage() {
   const addRx = () => setRxForms([...rxForms, { medication_name: "", dosage: "", frequency: "", duration: "", instructions: "" }]);
   const removeRx = (idx: number) => setRxForms(rxForms.filter((_, i) => i !== idx));
   const updateRx = (idx: number, field: keyof RxForm, value: string) => {
-    const u = [...rxForms];
-    u[idx] = { ...u[idx], [field]: value };
-    setRxForms(u);
+    const next = [...rxForms];
+    next[idx] = { ...next[idx], [field]: value };
+    setRxForms(next);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

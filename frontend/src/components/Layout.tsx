@@ -28,6 +28,16 @@ const navItems = [
   { to: "/administration", label: "Administration", icon: Settings, roles: ["doctor"] },
 ];
 
+function getNavItemClasses(isCollapsed: boolean, isActive: boolean) {
+  return cn(
+    "flex items-center rounded-lg transition-all duration-200 text-sm",
+    isCollapsed ? "justify-center px-2 py-2.5 lg:py-2" : "gap-3 px-2.5 py-2 lg:py-1.5",
+    isActive
+      ? "bg-primary-container text-primary font-semibold"
+      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+  );
+}
+
 export function Layout() {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
@@ -219,13 +229,7 @@ export function Layout() {
                 to={item.to}
                 onClick={() => setSidebarOpen(false)}
                 title={sidebarCollapsed ? item.label : undefined}
-                className={cn(
-                  "flex items-center rounded-lg transition-all duration-200 text-sm",
-                  sidebarCollapsed ? "justify-center px-2 py-2.5 lg:py-2" : "gap-3 px-2.5 py-2 lg:py-1.5",
-                  isActive
-                    ? "bg-primary-container text-primary font-semibold"
-                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                )}
+                className={getNavItemClasses(sidebarCollapsed, isActive)}
               >
                 <item.icon className={cn("h-5 w-5", isActive ? "text-primary" : "text-foreground/70")} />
                 {!sidebarCollapsed && item.label}
@@ -239,13 +243,7 @@ export function Layout() {
             to="/notifications"
             onClick={() => setSidebarOpen(false)}
             title={sidebarCollapsed ? "Notifications" : undefined}
-            className={cn(
-              "flex items-center rounded-lg transition-all duration-200 text-sm",
-              sidebarCollapsed ? "justify-center px-2 py-2.5 lg:py-2" : "gap-3 px-2.5 py-2 lg:py-1.5",
-              location.pathname === "/notifications"
-                ? "bg-primary-container text-primary font-semibold"
-                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-            )}
+            className={getNavItemClasses(sidebarCollapsed, location.pathname === "/notifications")}
           >
             <div className="relative">
               <BellDot className="h-5 w-5 text-foreground/70" />
@@ -261,13 +259,7 @@ export function Layout() {
             to="/settings"
             onClick={() => setSidebarOpen(false)}
             title={sidebarCollapsed ? "Settings" : undefined}
-            className={cn(
-              "flex items-center rounded-lg transition-all duration-200 text-sm",
-              sidebarCollapsed ? "justify-center px-2 py-2.5 lg:py-2" : "gap-3 px-2.5 py-2 lg:py-1.5",
-              location.pathname === "/settings"
-                ? "bg-primary-container text-primary font-semibold"
-                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-            )}
+            className={getNavItemClasses(sidebarCollapsed, location.pathname === "/settings")}
           >
             <Settings className="h-5 w-5 text-foreground/70" />
             {!sidebarCollapsed && "Settings"}

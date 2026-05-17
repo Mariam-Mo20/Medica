@@ -10,78 +10,73 @@ from app.core.database import engine, Base
 from app.api.v1 import router as v1_router
 
 
+def _migrate_notifications_table(conn_sync):
+    from sqlalchemy import inspect, text
+
+    inspector = inspect(conn_sync)
+    if "notifications" not in inspector.get_table_names():
+        return
+
+    columns = {column["name"] for column in inspector.get_columns("notifications")}
+    for old_column in ["receiver_id", "patient_id"]:
+        if old_column in columns:
+            conn_sync.execute(text(f"ALTER TABLE notifications DROP COLUMN IF EXISTS {old_column}"))
+
+    columns = {column["name"] for column in inspector.get_columns("notifications")}
+    for column_name, column_type in [
+        ("recipient_id", "INTEGER REFERENCES users(id)"),
+        ("sender_id", "INTEGER REFERENCES users(id)"),
+        ("notification_type", "VARCHAR(50) NOT NULL DEFAULT ''"),
+        ("title", "VARCHAR(255) NOT NULL DEFAULT ''"),
+        ("message", "TEXT"),
+        ("resource_type", "VARCHAR(50)"),
+        ("resource_id", "INTEGER"),
+        ("is_read", "BOOLEAN DEFAULT FALSE"),
+    ]:
+        if column_name not in columns:
+            conn_sync.execute(text(f"ALTER TABLE notifications ADD COLUMN {column_name} {column_type}"))
+
+
+def _drop_doctor_id_not_null(conn_sync, table_name: str):
+    from sqlalchemy import inspect, text
+
+    inspector = inspect(conn_sync)
+    if table_name not in inspector.get_table_names():
+        return
+
+    columns = {column["name"] for column in inspector.get_columns(table_name)}
+    if "doctor_id" not in columns:
+        return
+
+    doctor_id_info = [column for column in inspector.get_columns(table_name) if column["name"] == "doctor_id"][0]
+    if not doctor_id_info.get("nullable", True):
+        conn_sync.execute(text(f"ALTER TABLE {table_name} ALTER COLUMN doctor_id DROP NOT NULL"))
+
+
+def _ensure_perf_indexes(conn_sync):
+    from sqlalchemy import text
+
+    for statement in [
+        "CREATE INDEX IF NOT EXISTS idx_users_email ON users (email)",
+        "CREATE INDEX IF NOT EXISTS idx_users_tenant_id ON users (tenant_id)",
+        "CREATE INDEX IF NOT EXISTS idx_tenants_id ON tenants (id)",
+        "CREATE INDEX IF NOT EXISTS idx_patients_tenant_id ON patients (tenant_id)",
+        "CREATE INDEX IF NOT EXISTS idx_appt_tenant_scheduled ON appointments (tenant_id, scheduled_at DESC)",
+        "CREATE INDEX IF NOT EXISTS idx_appt_tenant_status_scheduled ON appointments (tenant_id, status, scheduled_at DESC)",
+        "CREATE INDEX IF NOT EXISTS idx_patient_tenant_created ON patients (tenant_id, created_at DESC)",
+    ]:
+        conn_sync.execute(text(statement))
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
-            # Migration: add missing columns to notifications table
-            from sqlalchemy import inspect, text
-            def migrate(conn_sync):
-                inspector = inspect(conn_sync)
-                if "notifications" in inspector.get_table_names():
-                    cols = {c["name"] for c in inspector.get_columns("notifications")}
-                    # Drop old columns that were replaced or renamed
-                    for old_col in ["receiver_id", "patient_id"]:
-                        if old_col in cols:
-                            conn_sync.execute(text(f"ALTER TABLE notifications DROP COLUMN IF EXISTS {old_col}"))
-                    # Refresh column list after drops
-                    cols = {c["name"] for c in inspector.get_columns("notifications")}
-                    for col, dtype in [
-                        ("recipient_id", "INTEGER REFERENCES users(id)"),
-                        ("sender_id", "INTEGER REFERENCES users(id)"),
-                        ("notification_type", "VARCHAR(50) NOT NULL DEFAULT ''"),
-                        ("title", "VARCHAR(255) NOT NULL DEFAULT ''"),
-                        ("message", "TEXT"),
-                        ("resource_type", "VARCHAR(50)"),
-                        ("resource_id", "INTEGER"),
-                        ("is_read", "BOOLEAN DEFAULT FALSE"),
-                    ]:
-                        if col not in cols:
-                            conn_sync.execute(text(f"ALTER TABLE notifications ADD COLUMN {col} {dtype}"))
-            await conn.run_sync(migrate)
-            def migrate_medical(conn_sync):
-                inspector = inspect(conn_sync)
-                if "medical_records" in inspector.get_table_names():
-                    cols = {c["name"] for c in inspector.get_columns("medical_records")}
-                    if "doctor_id" in cols:
-                        col_info = [c for c in inspector.get_columns("medical_records") if c["name"] == "doctor_id"][0]
-                        if not col_info.get("nullable", True):
-                            conn_sync.execute(text("ALTER TABLE medical_records ALTER COLUMN doctor_id DROP NOT NULL"))
-            await conn.run_sync(migrate_medical)
-            def migrate_prescriptions(conn_sync):
-                inspector = inspect(conn_sync)
-                if "prescriptions" in inspector.get_table_names():
-                    cols = {c["name"] for c in inspector.get_columns("prescriptions")}
-                    if "doctor_id" in cols:
-                        col_info = [c for c in inspector.get_columns("prescriptions") if c["name"] == "doctor_id"][0]
-                        if not col_info.get("nullable", True):
-                            conn_sync.execute(text("ALTER TABLE prescriptions ALTER COLUMN doctor_id DROP NOT NULL"))
-            await conn.run_sync(migrate_prescriptions)
-
-            def ensure_perf_indexes(conn_sync):
-                conn_sync.execute(text(
-                    "CREATE INDEX IF NOT EXISTS idx_users_email ON users (email)"
-                ))
-                conn_sync.execute(text(
-                    "CREATE INDEX IF NOT EXISTS idx_users_tenant_id ON users (tenant_id)"
-                ))
-                conn_sync.execute(text(
-                    "CREATE INDEX IF NOT EXISTS idx_tenants_id ON tenants (id)"
-                ))
-                conn_sync.execute(text(
-                    "CREATE INDEX IF NOT EXISTS idx_patients_tenant_id ON patients (tenant_id)"
-                ))
-                conn_sync.execute(text(
-                    "CREATE INDEX IF NOT EXISTS idx_appt_tenant_scheduled ON appointments (tenant_id, scheduled_at DESC)"
-                ))
-                conn_sync.execute(text(
-                    "CREATE INDEX IF NOT EXISTS idx_appt_tenant_status_scheduled ON appointments (tenant_id, status, scheduled_at DESC)"
-                ))
-                conn_sync.execute(text(
-                    "CREATE INDEX IF NOT EXISTS idx_patient_tenant_created ON patients (tenant_id, created_at DESC)"
-                ))
-            await conn.run_sync(ensure_perf_indexes)
+            await conn.run_sync(_migrate_notifications_table)
+            await conn.run_sync(lambda conn_sync: _drop_doctor_id_not_null(conn_sync, "medical_records"))
+            await conn.run_sync(lambda conn_sync: _drop_doctor_id_not_null(conn_sync, "prescriptions"))
+            await conn.run_sync(_ensure_perf_indexes)
     except Exception:
         pass
 

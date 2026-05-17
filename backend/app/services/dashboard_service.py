@@ -10,12 +10,11 @@ from app.schemas.dashboard import DashboardStats
 
 
 async def get_dashboard_stats(db: AsyncSession, tenant_id: int) -> DashboardStats:
-    async def timed_execute(label: str, stmt):
+    async def timed_execute(label: str, statement):
         if not settings.DEBUG:
-            result = await db.execute(stmt)
-            return result
+            return await db.execute(statement)
         started_at = perf_counter()
-        result = await db.execute(stmt)
+        result = await db.execute(statement)
         duration_ms = (perf_counter() - started_at) * 1000
         print(f"[perf][dashboard] {label}: {duration_ms:.1f}ms", flush=True)
         return result

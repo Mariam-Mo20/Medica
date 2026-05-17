@@ -15,6 +15,16 @@ from app.services.appointment_service import check_conflict, generate_series_ins
 router = APIRouter()
 
 
+async def _get_appointment_or_404(db: AsyncSession, appointment_id: int, tenant_id: int) -> Appointment:
+    result = await db.execute(
+        select(Appointment).where(Appointment.id == appointment_id, Appointment.tenant_id == tenant_id)
+    )
+    appointment = result.scalar_one_or_none()
+    if not appointment:
+        raise HTTPException(status_code=404, detail="Appointment not found")
+    return appointment
+
+
 async def _fetch_appointment_response_by_id(db: AsyncSession, appointment_id: int, tenant_id: int) -> AppointmentResponse:
     result = await db.execute(
         select(
@@ -191,12 +201,7 @@ async def get_appointment(
     current_user: User = Depends(require_role("doctor", "assistant")),
     tenant: Tenant = Depends(get_current_tenant),
 ):
-    result = await db.execute(
-        select(Appointment).where(Appointment.id == appointment_id, Appointment.tenant_id == tenant.id)
-    )
-    appointment = result.scalar_one_or_none()
-    if not appointment:
-        raise HTTPException(status_code=404, detail="Appointment not found")
+    appointment = await _get_appointment_or_404(db, appointment_id, tenant.id)
     return await _fetch_appointment_response_by_id(db, appointment.id, tenant.id)
 
 
@@ -208,12 +213,7 @@ async def update_appointment(
     current_user: User = Depends(require_role("doctor", "assistant")),
     tenant: Tenant = Depends(get_current_tenant),
 ):
-    result = await db.execute(
-        select(Appointment).where(Appointment.id == appointment_id, Appointment.tenant_id == tenant.id)
-    )
-    appointment = result.scalar_one_or_none()
-    if not appointment:
-        raise HTTPException(status_code=404, detail="Appointment not found")
+    appointment = await _get_appointment_or_404(db, appointment_id, tenant.id)
 
     if data.scheduled_at or data.duration_minutes or data.doctor_id:
         doc_id = data.doctor_id or appointment.doctor_id
@@ -243,12 +243,7 @@ async def update_appointment_status(
     if data.status not in valid_statuses:
         raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {valid_statuses}")
 
-    result = await db.execute(
-        select(Appointment).where(Appointment.id == appointment_id, Appointment.tenant_id == tenant.id)
-    )
-    appointment = result.scalar_one_or_none()
-    if not appointment:
-        raise HTTPException(status_code=404, detail="Appointment not found")
+    appointment = await _get_appointment_or_404(db, appointment_id, tenant.id)
 
     appointment.status = data.status
     await db.flush()
@@ -262,12 +257,7 @@ async def cancel_appointment(
     current_user: User = Depends(require_role("doctor", "assistant")),
     tenant: Tenant = Depends(get_current_tenant),
 ):
-    result = await db.execute(
-        select(Appointment).where(Appointment.id == appointment_id, Appointment.tenant_id == tenant.id)
-    )
-    appointment = result.scalar_one_or_none()
-    if not appointment:
-        raise HTTPException(status_code=404, detail="Appointment not found")
+    appointment = await _get_appointment_or_404(db, appointment_id, tenant.id)
 
     appointment.status = "cancelled"
 

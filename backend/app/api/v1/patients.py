@@ -17,6 +17,16 @@ from app.services.patient_service import generate_mrn
 router = APIRouter()
 
 
+async def _get_patient_or_404(db: AsyncSession, patient_id: int, tenant_id: int) -> Patient:
+    result = await db.execute(
+        select(Patient).where(Patient.id == patient_id, Patient.tenant_id == tenant_id)
+    )
+    patient = result.scalar_one_or_none()
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    return patient
+
+
 @router.post("/", response_model=PatientResponse, status_code=201)
 async def create_patient(
     data: PatientCreate,
@@ -169,13 +179,7 @@ async def get_patient(
     current_user: User = Depends(require_role("doctor", "assistant")),
     tenant: Tenant = Depends(get_current_tenant),
 ):
-    result = await db.execute(
-        select(Patient).where(Patient.id == patient_id, Patient.tenant_id == tenant.id)
-    )
-    patient = result.scalar_one_or_none()
-    if not patient:
-        raise HTTPException(status_code=404, detail="Patient not found")
-    return patient
+    return await _get_patient_or_404(db, patient_id, tenant.id)
 
 
 @router.put("/{patient_id}", response_model=PatientResponse)
@@ -186,12 +190,7 @@ async def update_patient(
     current_user: User = Depends(require_role("doctor", "assistant")),
     tenant: Tenant = Depends(get_current_tenant),
 ):
-    result = await db.execute(
-        select(Patient).where(Patient.id == patient_id, Patient.tenant_id == tenant.id)
-    )
-    patient = result.scalar_one_or_none()
-    if not patient:
-        raise HTTPException(status_code=404, detail="Patient not found")
+    patient = await _get_patient_or_404(db, patient_id, tenant.id)
 
     for field, value in data.model_dump(exclude_unset=True).items():
         setattr(patient, field, value)

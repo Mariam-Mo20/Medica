@@ -181,11 +181,6 @@ export function AppointmentsPage() {
     }
   };
 
-  const handleDismissAlert = () => {
-    setShareSuccess("");
-    setShareError("");
-  };
-
   const getPageNumbers = () => {
     const pages: (number | "...")[] = [];
     if (totalPages <= 5) {

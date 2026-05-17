@@ -23,6 +23,22 @@ interface MedicationSuggestion {
   usage_count: number;
 }
 
+const MS_PER_YEAR = 31557600000;
+const MS_PER_DAY = 86400000;
+
+function getAgeFromDateOfBirth(dateOfBirth?: string): number | null {
+  if (!dateOfBirth) return null;
+  return Math.floor((Date.now() - new Date(dateOfBirth).getTime()) / MS_PER_YEAR);
+}
+
+function getDaysSince(dateTime?: string): string {
+  if (!dateTime) return "No visits recorded";
+  const diff = Math.floor((Date.now() - new Date(dateTime).getTime()) / MS_PER_DAY);
+  if (diff === 0) return "Today";
+  if (diff === 1) return "Yesterday";
+  return `${diff} days ago`;
+}
+
 export function PatientDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -46,6 +62,8 @@ export function PatientDetailPage() {
   const [editRxForms, setEditRxForms] = useState<PrescriptionForm[]>([]);
   const [rxSuggestions, setRxSuggestions] = useState<Record<number, MedicationSuggestion[]>>({});
   const [activeRxSuggestionRow, setActiveRxSuggestionRow] = useState<number | null>(null);
+
+  const getRecordPrescriptions = (recordId: number) => prescriptions.filter((p) => p.medical_record_id === recordId);
 
   useEffect(() => {
     if (!id) return;
@@ -71,9 +89,9 @@ export function PatientDetailPage() {
     setRxForms([...rxForms, { medication_name: "", dosage: "", frequency: "", saved: false }]);
   const removeRx = (idx: number) => setRxForms(rxForms.filter((_, i) => i !== idx));
   const updateRx = (idx: number, field: keyof PrescriptionForm, value: string) => {
-    const u = [...rxForms];
-    u[idx] = { ...u[idx], [field]: value, saved: false };
-    setRxForms(u);
+    const next = [...rxForms];
+    next[idx] = { ...next[idx], [field]: value, saved: false };
+    setRxForms(next);
   };
 
   const handleMedicationNameChange = async (idx: number, value: string) => {
@@ -98,13 +116,13 @@ export function PatientDetailPage() {
   };
 
   const saveRxDraft = (idx: number) => {
-    const u = [...rxForms];
-    if (!u[idx].medication_name.trim()) {
+    const next = [...rxForms];
+    if (!next[idx].medication_name.trim()) {
       setError("Medication name is required before saving medication");
       return;
     }
-    u[idx] = { ...u[idx], saved: true };
-    setRxForms(u);
+    next[idx] = { ...next[idx], saved: true };
+    setRxForms(next);
     setError("");
   };
 
@@ -157,11 +175,12 @@ export function PatientDetailPage() {
       setEditDiagnosis(record.diagnosis || "");
       setEditSymptoms(record.symptoms || "");
       setEditVisitNotes(record.visit_notes || "");
-      setEditRxForms(
-        prescriptions
-          .filter((p) => p.medical_record_id === record.id)
-          .map((p) => ({ id: p.id, medication_name: p.medication_name, dosage: p.dosage, frequency: p.frequency })),
-      );
+      setEditRxForms(getRecordPrescriptions(record.id).map((p) => ({
+        id: p.id,
+        medication_name: p.medication_name,
+        dosage: p.dosage,
+        frequency: p.frequency,
+      })));
     }
     setExpandedVisits((prev) => ({ ...prev, [recordId]: true }));
   };
@@ -216,7 +235,7 @@ export function PatientDetailPage() {
 
   const printPrescription = (record: MedicalRecord) => {
     if (!patient) return;
-    const meds = prescriptions.filter((p) => p.medical_record_id === record.id);
+    const meds = getRecordPrescriptions(record.id);
     if (meds.length === 0) return;
 
     const w = window.open("", "_blank", "width=900,height=700");
@@ -248,9 +267,7 @@ export function PatientDetailPage() {
   }
 
   const lastRecord = records[records.length - 1];
-  const age = patient.date_of_birth
-    ? Math.floor((Date.now() - new Date(patient.date_of_birth).getTime()) / 31557600000)
-    : null;
+  const age = getAgeFromDateOfBirth(patient.date_of_birth);
   const fullName = `${patient.first_name} ${patient.last_name}`;
   const initials = ((patient.first_name?.[0] || "") + (patient.last_name?.[0] || "")).toUpperCase();
 
@@ -298,12 +315,7 @@ export function PatientDetailPage() {
                   {lastRecord?.created_at ? formatDisplayDate(lastRecord.created_at) : "—"}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {lastRecord?.created_at
-                    ? (() => {
-                        const diff = Math.floor((Date.now() - new Date(lastRecord.created_at).getTime()) / 86400000);
-                        return diff === 0 ? "Today" : diff === 1 ? "Yesterday" : `${diff} days ago`;
-                      })()
-                    : "No visits recorded"}
+                  {getDaysSince(lastRecord?.created_at)}
                 </p>
               </div>
             </CardContent>
@@ -536,7 +548,7 @@ export function PatientDetailPage() {
                             <Eye className="h-3 w-3 mr-1" />
                             {expandedVisits[record.id] ? "Hide Visit" : "View Visit"}
                           </Button>
-                          {prescriptions.filter((p) => p.medical_record_id === record.id).length > 0 && (
+                          {getRecordPrescriptions(record.id).length > 0 && (
                             <Button type="button" variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={() => printPrescription(record)}>
                               <Printer className="h-3 w-3 mr-1" />
                               Print Prescription
@@ -573,7 +585,7 @@ export function PatientDetailPage() {
                           </div>
                           <div className="rounded-lg border border-border bg-muted/20 p-3 sm:col-span-2">
                             <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Medication</p>
-                            {prescriptions.filter((p) => p.medical_record_id === record.id).length === 0 ? (
+                            {getRecordPrescriptions(record.id).length === 0 ? (
                               <p className="mt-1 text-sm text-muted-foreground">No medication prescribed</p>
                             ) : editingRecordId === record.id ? (
                               <div className="mt-1 space-y-2">
@@ -589,9 +601,7 @@ export function PatientDetailPage() {
                               </div>
                             ) : (
                               <ul className="mt-1 space-y-1">
-                                {prescriptions
-                                  .filter((p) => p.medical_record_id === record.id)
-                                  .map((p) => (
+                                {getRecordPrescriptions(record.id).map((p) => (
                                     <li key={`expanded-${p.id}`} className="text-sm text-foreground">
                                       <div className="font-medium">{p.medication_name}</div>
                                       <div className="text-xs text-muted-foreground">{p.dosage || "-"}</div>
@@ -614,7 +624,7 @@ export function PatientDetailPage() {
                         </div>
                       )}
                     </div>
-                    {(record.diagnosis || prescriptions.filter((p) => p.medical_record_id === record.id).length > 0) && (
+                    {(record.diagnosis || getRecordPrescriptions(record.id).length > 0) && (
                       <div className="bg-muted/30 p-5 border-t border-border flex flex-col sm:flex-row gap-6">
                         {record.diagnosis && (
                           <div className="flex-1">
@@ -622,13 +632,11 @@ export function PatientDetailPage() {
                             <p className="text-sm font-bold text-foreground">{record.diagnosis}</p>
                           </div>
                         )}
-                        {prescriptions.filter((p) => p.medical_record_id === record.id).length > 0 && (
+                        {getRecordPrescriptions(record.id).length > 0 && (
                           <div className="flex-1">
                             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Prescription</p>
                             <ul className="space-y-1">
-                              {prescriptions
-                                .filter((p) => p.medical_record_id === record.id)
-                                .map((p) => (
+                              {getRecordPrescriptions(record.id).map((p) => (
                                   <li key={p.id} className="flex items-center gap-1.5 text-sm font-medium text-foreground">
                                     <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
                                     {p.medication_name} {p.dosage} ({p.frequency})

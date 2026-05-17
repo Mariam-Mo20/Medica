@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from sqlalchemy import select, and_
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.appointment import Appointment
 
@@ -28,7 +28,7 @@ async def check_conflict(
 
 
 async def generate_series_instances(
-    db: AsyncSession,
+    _db: AsyncSession,
     appointment: Appointment,
     tenant_id: int,
     user_id: int,

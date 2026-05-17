@@ -24,6 +24,14 @@ const durationOptions = [
   { value: "60", label: "60 min" },
 ];
 
+function getTodayAsDisplayDate(): string {
+  const today = new Date();
+  const day = String(today.getDate()).padStart(2, "0");
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const year = today.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+
 export function AppointmentFormPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -34,12 +42,8 @@ export function AppointmentFormPage() {
   const [newPatient, setNewPatient] = useState({
     full_name: "", date_of_birth: "", phone: "", email: "",
   });
-  const today = new Date();
-  const dd = String(today.getDate()).padStart(2, "0");
-  const mm = String(today.getMonth() + 1).padStart(2, "0");
-  const yyyy = today.getFullYear();
   const [form, setForm] = useState({
-    scheduled_at: `${dd}/${mm}/${yyyy}`,
+    scheduled_at: getTodayAsDisplayDate(),
     scheduled_time: "09:00",
     duration_minutes: "30",
     reason: "",
@@ -61,6 +65,13 @@ export function AppointmentFormPage() {
       })
       .catch(() => {});
   }, [searchParams]);
+
+  const clearPatientSelection = () => {
+    setSelectedPatient(null);
+    setShowNewPatient(false);
+    setPatientSearch("");
+    setPatients([]);
+  };
 
   const handlePatientSearch = async (q: string) => {
     setPatientSearch(q);
@@ -167,7 +178,7 @@ export function AppointmentFormPage() {
                   <span className="text-sm">
                     {selectedPatient.first_name} {selectedPatient.last_name} · {selectedPatient.medical_record_number}
                   </span>
-                  <Button type="button" variant="ghost" size="sm" onClick={() => { setSelectedPatient(null); setShowNewPatient(false); }}>
+                  <Button type="button" variant="ghost" size="sm" onClick={clearPatientSelection}>
                     Change
                   </Button>
                 </div>
@@ -249,10 +260,10 @@ export function AppointmentFormPage() {
                       ))}
                     </div>
                   )}
-                  <Button type="button" variant="outline" size="sm" className="w-full" onClick={() => { setShowNewPatient(true); setPatients([]); setPatientSearch(""); }}>
-                    <UserPlus className="h-3 w-3 mr-2" />
-                    Register New Patient
-                  </Button>
+                    <Button type="button" variant="outline" size="sm" className="w-full" onClick={() => { setShowNewPatient(true); setPatients([]); setPatientSearch(""); }}>
+                      <UserPlus className="h-3 w-3 mr-2" />
+                      Register New Patient
+                    </Button>
                 </div>
               )}
             </div>

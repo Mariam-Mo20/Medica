@@ -18,6 +18,11 @@ interface PrescriptionForm {
   saved?: boolean;
 }
 
+interface MedicationSuggestion {
+  medication_name: string;
+  usage_count: number;
+}
+
 export function PatientDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -39,6 +44,8 @@ export function PatientDetailPage() {
   const [editSymptoms, setEditSymptoms] = useState("");
   const [editVisitNotes, setEditVisitNotes] = useState("");
   const [editRxForms, setEditRxForms] = useState<PrescriptionForm[]>([]);
+  const [rxSuggestions, setRxSuggestions] = useState<Record<number, MedicationSuggestion[]>>({});
+  const [activeRxSuggestionRow, setActiveRxSuggestionRow] = useState<number | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -67,6 +74,27 @@ export function PatientDetailPage() {
     const u = [...rxForms];
     u[idx] = { ...u[idx], [field]: value, saved: false };
     setRxForms(u);
+  };
+
+  const handleMedicationNameChange = async (idx: number, value: string) => {
+    updateRx(idx, "medication_name", value);
+    setActiveRxSuggestionRow(idx);
+    if (value.trim().length < 1) {
+      setRxSuggestions((prev) => ({ ...prev, [idx]: [] }));
+      return;
+    }
+    try {
+      const data = await api.get<MedicationSuggestion[]>(`/prescriptions/suggestions?q=${encodeURIComponent(value)}&limit=6`);
+      setRxSuggestions((prev) => ({ ...prev, [idx]: data }));
+    } catch {
+      setRxSuggestions((prev) => ({ ...prev, [idx]: [] }));
+    }
+  };
+
+  const applyMedicationSuggestion = (idx: number, name: string) => {
+    updateRx(idx, "medication_name", name);
+    setRxSuggestions((prev) => ({ ...prev, [idx]: [] }));
+    setActiveRxSuggestionRow(null);
   };
 
   const saveRxDraft = (idx: number) => {
@@ -434,7 +462,24 @@ export function PatientDetailPage() {
                           </button>
                         </div>
                         <div className="grid gap-2 md:grid-cols-2">
-                          <Input value={pf.medication_name} onChange={(e) => updateRx(idx, "medication_name", e.target.value)} placeholder="Medication name *" className="h-9 text-sm border-border rounded-lg" required disabled={pf.saved} />
+                          <div className="relative">
+                            <Input value={pf.medication_name} onChange={(e) => handleMedicationNameChange(idx, e.target.value)} onFocus={() => setActiveRxSuggestionRow(idx)} placeholder="Medication name *" className="h-9 text-sm border-border rounded-lg" required disabled={pf.saved} />
+                            {!pf.saved && activeRxSuggestionRow === idx && (rxSuggestions[idx]?.length || 0) > 0 && (
+                              <div className="absolute z-20 mt-1 w-full rounded-md border border-border bg-white shadow-md overflow-hidden">
+                                {rxSuggestions[idx].map((s) => (
+                                  <button
+                                    key={`${idx}-${s.medication_name}`}
+                                    type="button"
+                                    className="w-full px-3 py-2 text-left hover:bg-accent/60"
+                                    onClick={() => applyMedicationSuggestion(idx, s.medication_name)}
+                                  >
+                                    <span className="text-sm text-foreground">{s.medication_name}</span>
+                                    <span className="ml-2 text-xs text-muted-foreground">used {s.usage_count}x</span>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                           <div className="space-y-2">
                             <Input value={pf.dosage} onChange={(e) => updateRx(idx, "dosage", e.target.value)} placeholder="Dosage (optional)" className="h-9 text-sm border-border rounded-lg" disabled={pf.saved} />
                             <Input value={pf.frequency} onChange={(e) => updateRx(idx, "frequency", e.target.value)} placeholder="Frequency (optional)" className="h-9 text-sm border-border rounded-lg" disabled={pf.saved} />

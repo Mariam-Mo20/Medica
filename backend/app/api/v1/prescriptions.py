@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from app.core.database import get_db
@@ -13,6 +14,11 @@ from app.models.prescription import Prescription
 from app.schemas.prescription import PrescriptionCreate, PrescriptionResponse, PrescriptionUpdate
 
 router = APIRouter()
+
+
+class MedicationSuggestionResponse(BaseModel):
+    medication_name: str
+    usage_count: int
 
 
 @router.post("/medical-record/{record_id}", response_model=list[PrescriptionResponse], status_code=201)
@@ -84,6 +90,38 @@ async def get_prescriptions(
             resp.doctor_name = p.doctor.user.full_name
         output.append(resp)
     return output
+
+
+@router.get("/suggestions", response_model=list[MedicationSuggestionResponse])
+async def get_medication_suggestions(
+    q: str = Query(min_length=1),
+    limit: int = Query(8, ge=1, le=20),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role("doctor", "assistant")),
+    tenant: Tenant = Depends(get_current_tenant),
+):
+    term = f"%{q.strip()}%"
+    result = await db.execute(
+        select(
+            Prescription.medication_name,
+            func.count(Prescription.id).label("usage_count"),
+        )
+        .where(
+            Prescription.tenant_id == tenant.id,
+            Prescription.medication_name.ilike(term),
+        )
+        .group_by(Prescription.medication_name)
+        .order_by(func.count(Prescription.id).desc(), Prescription.medication_name.asc())
+        .limit(limit)
+    )
+    rows = result.all()
+    return [
+        MedicationSuggestionResponse(
+            medication_name=row.medication_name,
+            usage_count=row.usage_count,
+        )
+        for row in rows
+    ]
 
 
 @router.put("/{prescription_id}", response_model=PrescriptionResponse)

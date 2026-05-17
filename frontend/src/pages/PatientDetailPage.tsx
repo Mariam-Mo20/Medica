@@ -187,6 +187,7 @@ export function PatientDetailPage() {
   };
 
   const printPrescription = (record: MedicalRecord) => {
+    if (!patient) return;
     const meds = prescriptions.filter((p) => p.medical_record_id === record.id);
     if (meds.length === 0) return;
 

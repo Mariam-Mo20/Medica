@@ -8,10 +8,10 @@ class Settings(BaseSettings):
     DEBUG: bool = False
     APP_TIMEZONE: str = "Africa/Cairo"
 
-    DATABASE_URL: str = "postgresql+asyncpg://postgres.varghgyjzqmtjbruknvg:Mariam30305200102363@aws-0-eu-west-1.pooler.supabase.com:5432/postgres?ssl=require"
-    DATABASE_URL_SYNC: str = "postgresql://postgres.varghgyjzqmtjbruknvg:Mariam30305200102363@aws-0-eu-west-1.pooler.supabase.com:5432/postgres"
+    DATABASE_URL: str = "sqlite+aiosqlite:///./medica.db"
+    DATABASE_URL_SYNC: str = "sqlite:///./medica.db"
 
-    SECRET_KEY: str = "change-this-in-production"
+    SECRET_KEY: str = "replace-this-secret-key-in-production"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
@@ -26,8 +26,8 @@ class Settings(BaseSettings):
     RESEND_API_KEY: str = ""
     FRONTEND_URL: str = "https://frontend-neon-eta-yhbfdcoe8c.vercel.app"
 
-    DEFAULT_ADMIN_EMAIL: str = "admin@medica.com"
-    DEFAULT_ADMIN_PASSWORD: str = "admin123"
+    DEFAULT_ADMIN_EMAIL: str = ""
+    DEFAULT_ADMIN_PASSWORD: str = ""
 
     class Config:
         env_file = ".env"

@@ -117,9 +117,11 @@ async def request_timing_middleware(request: Request, call_next):
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
+    if settings.DEBUG:
+        print(f"[error] unhandled exception on {request.method} {request.url.path}: {exc}")
     return JSONResponse(
         status_code=500,
-        content={"detail": "Internal server error", "message": str(exc)},
+        content={"detail": "Internal server error", "message": "An unexpected error occurred"},
     )
 
 

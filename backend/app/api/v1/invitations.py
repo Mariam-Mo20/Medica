@@ -1,6 +1,6 @@
 import secrets
 from datetime import datetime, timedelta, timezone
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
@@ -11,15 +11,18 @@ from app.models.tenant import Tenant
 from app.models.user import User
 from app.models.invitation import Invitation
 from app.schemas.invitation import InvitationCreate, InvitationResponse, InvitationCheckResponse
+from app.core.rate_limit import enforce_rate_limit
 
 router = APIRouter()
 
 
 @router.get("/check")
 async def check_invitation(
+    request: Request,
     token: str,
     db: AsyncSession = Depends(get_db),
 ):
+    enforce_rate_limit(request, action="invitation_check", max_requests=30, window_seconds=60)
     result = await db.execute(
         select(Invitation).where(
             Invitation.token == token,

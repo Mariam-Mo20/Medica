@@ -1,11 +1,12 @@
 import re
 import secrets
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.security import hash_password, verify_password, create_access_token, create_refresh_token, decode_token
+from app.core.rate_limit import enforce_rate_limit
 from app.middleware.auth_middleware import get_current_user
 from app.middleware.tenant_middleware import get_current_tenant
 from app.models.tenant import Tenant
@@ -18,7 +19,8 @@ router = APIRouter()
 
 
 @router.post("/register", response_model=TokenResponse)
-async def register(data: RegisterRequest, db: AsyncSession = Depends(get_db)):
+async def register(request: Request, data: RegisterRequest, db: AsyncSession = Depends(get_db)):
+    enforce_rate_limit(request, action="auth_register", max_requests=10, window_seconds=60)
     if data.role not in ("doctor", "assistant"):
         raise HTTPException(status_code=400, detail="Role must be 'doctor' or 'assistant'")
 
@@ -93,7 +95,8 @@ async def register(data: RegisterRequest, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/login", response_model=TokenResponse)
-async def login(data: LoginRequest, db: AsyncSession = Depends(get_db)):
+async def login(request: Request, data: LoginRequest, db: AsyncSession = Depends(get_db)):
+    enforce_rate_limit(request, action="auth_login", max_requests=12, window_seconds=60)
     result = await db.execute(select(User).where(User.email == data.email))
     user = result.scalar_one_or_none()
 
@@ -109,7 +112,8 @@ async def login(data: LoginRequest, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/refresh", response_model=TokenResponse)
-async def refresh(data: RefreshRequest, db: AsyncSession = Depends(get_db)):
+async def refresh(request: Request, data: RefreshRequest, db: AsyncSession = Depends(get_db)):
+    enforce_rate_limit(request, action="auth_refresh", max_requests=20, window_seconds=60)
     payload = decode_token(data.refresh_token)
     if not payload or payload.get("type") != "refresh":
         raise HTTPException(status_code=401, detail="Invalid refresh token")

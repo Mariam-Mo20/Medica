@@ -169,6 +169,14 @@ export function PatientDetailPage() {
       return;
     }
 
+    setExpandedVisits((prev) => ({ ...prev, [recordId]: true }));
+  };
+
+  const startEditVisit = (recordId: number) => {
+    if (!expandedVisits[recordId]) {
+      setExpandedVisits((prev) => ({ ...prev, [recordId]: true }));
+    }
+
     const record = records.find((r) => r.id === recordId);
     if (record) {
       setEditingRecordId(record.id);
@@ -182,7 +190,6 @@ export function PatientDetailPage() {
         frequency: p.frequency,
       })));
     }
-    setExpandedVisits((prev) => ({ ...prev, [recordId]: true }));
   };
 
   const cancelEditVisit = () => {
@@ -551,6 +558,11 @@ export function PatientDetailPage() {
                             <Eye className="h-3 w-3 mr-1" />
                             {expandedVisits[record.id] ? "Hide Visit" : "View Visit"}
                           </Button>
+                          {getRecordPrescriptions(record.id).length > 0 && (
+                            <Button type="button" variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={() => startEditVisit(record.id)}>
+                              Edit Medication
+                            </Button>
+                          )}
                           <Button
                             type="button"
                             variant="outline"

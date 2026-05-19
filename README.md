@@ -21,6 +21,41 @@ Medica is a multi-tenant clinic management web application for doctors and assis
 - Deploy: Render (backend), Vercel (frontend).
 - CI: GitHub Actions (backend tests + frontend type-check).
 
+## Screenshots
+
+### Dashboard
+![Dashboard](docs/screenshots/dashboard_page.PNG)
+
+### Patients
+![Patients](docs/screenshots/patients_page.PNG)
+
+### Patient Details
+![Patient Details](docs/screenshots/patient_profile.PNG)
+
+### Appointments
+![Appointments](docs/screenshots/appointments_page.PNG)
+
+### Login
+![Login](docs/screenshots/login_page.png)
+
+### Administration
+![Administration](docs/screenshots/adminstration_page.PNG)
+
+### Share Patient Flow
+![Share Patient Flow](docs/screenshots/share_patient_flow.PNG)
+
+### Share Patient Flow (Step 2)
+![Share Patient Flow Step 2](docs/screenshots/share_patient_flow_step2.PNG)
+
+### Signup
+![Signup](docs/screenshots/signup_page.png)
+
+### Select Role
+![Select Role](docs/screenshots/role_page.png)
+
+### Create Clinic
+![Create Clinic](docs/screenshots/create_clinic.png)
+
 
 ## Local Setup
 

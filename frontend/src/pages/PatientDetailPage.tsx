@@ -236,7 +236,10 @@ export function PatientDetailPage() {
   const printPrescription = (record: MedicalRecord) => {
     if (!patient) return;
     const meds = getRecordPrescriptions(record.id);
-    if (meds.length === 0) return;
+    if (meds.length === 0) {
+      setError("No prescription found for this visit yet.");
+      return;
+    }
 
     const w = window.open("", "_blank", "width=900,height=700");
     if (!w) return;
@@ -554,7 +557,6 @@ export function PatientDetailPage() {
                             size="sm"
                             className="h-7 px-2 text-xs"
                             onClick={() => printPrescription(record)}
-                            disabled={getRecordPrescriptions(record.id).length === 0}
                           >
                             <Printer className="h-3 w-3 mr-1" />
                             Print Prescription

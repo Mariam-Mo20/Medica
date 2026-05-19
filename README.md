@@ -40,80 +40,82 @@ Medica helps clinics run daily operations in one system: onboarding teams, regis
 
 ## Screenshots
 
+### Dashboard
+
+<p align="center">
+  <img src="docs/screenshots/dashboard_page.PNG" width="90%" alt="Dashboard" />
+</p>
+
 ### Authentication
 
 <table>
   <tr>
-    <td align="center"><strong>Login</strong></td>
-    <td align="center"><strong>Signup</strong></td>
-    <td align="center"><strong>Select Role</strong></td>
-  </tr>
-  <tr>
-    <td><img src="docs/screenshots/login_page.png" width="100%" alt="Login" /></td>
-    <td><img src="docs/screenshots/signup_page.png" width="100%" alt="Signup" /></td>
-    <td><img src="docs/screenshots/role_page.png" width="100%" alt="Select Role" /></td>
-  </tr>
-  <tr>
-    <td colspan="3" align="center"><strong>Create Clinic</strong></td>
-  </tr>
-  <tr>
-    <td colspan="3"><img src="docs/screenshots/create_clinic.png" width="100%" alt="Create Clinic" /></td>
+    <td align="center">
+      <img src="docs/screenshots/login_page.png" width="100%" alt="Login" /><br />
+      <sub><strong>Login</strong></sub>
+    </td>
+    <td align="center">
+      <img src="docs/screenshots/signup_page.png" width="100%" alt="Signup" /><br />
+      <sub><strong>Signup</strong></sub>
+    </td>
+    <td align="center">
+      <img src="docs/screenshots/role_page.png" width="100%" alt="Select Role" /><br />
+      <sub><strong>Select Role</strong></sub>
+    </td>
   </tr>
 </table>
 
-### Dashboard and Analytics
-
-<table>
-  <tr>
-    <td><img src="docs/screenshots/dashboard_page.PNG" width="100%" alt="Dashboard" /></td>
-  </tr>
-</table>
+<p align="center">
+  <img src="docs/screenshots/create_clinic.png" width="90%" alt="Create Clinic" /><br />
+  <sub><strong>Create Clinic</strong></sub>
+</p>
 
 ### Patients Management
 
 <table>
   <tr>
-    <td align="center"><strong>Patients List</strong></td>
-    <td align="center"><strong>Patient Profile</strong></td>
-  </tr>
-  <tr>
-    <td><img src="docs/screenshots/patients_page.PNG" width="100%" alt="Patients List" /></td>
-    <td><img src="docs/screenshots/patient_profile.PNG" width="100%" alt="Patient Profile" /></td>
+    <td align="center">
+      <img src="docs/screenshots/patients_page.PNG" width="100%" alt="Patients List" /><br />
+      <sub><strong>Patients List</strong></sub>
+    </td>
+    <td align="center">
+      <img src="docs/screenshots/patient_profile.PNG" width="100%" alt="Patient Profile" /><br />
+      <sub><strong>Patient Profile</strong></sub>
+    </td>
   </tr>
 </table>
 
 ### Appointments
 
-<table>
-  <tr>
-    <td><img src="docs/screenshots/appointments_page.PNG" width="100%" alt="Appointments" /></td>
-  </tr>
-</table>
+<p align="center">
+  <img src="docs/screenshots/appointments_page.PNG" width="90%" alt="Appointments" /><br />
+  <sub><strong>Appointments Board</strong></sub>
+</p>
 
 ### Consultations and Prescriptions
 
-<table>
-  <tr>
-    <td><img src="docs/screenshots/patient_profile.PNG" width="100%" alt="Consultation and Prescription in Patient Profile" /></td>
-  </tr>
-</table>
+<p align="center">
+  <img src="docs/screenshots/patient_profile.PNG" width="90%" alt="Consultations and Prescriptions" /><br />
+  <sub><strong>Visit Timeline, Consultation Notes, and Prescriptions</strong></sub>
+</p>
 
 ### Collaboration and Administration
 
+<p align="center">
+  <img src="docs/screenshots/adminstration_page.PNG" width="85%" alt="Administration" /><br />
+  <sub><strong>Administration</strong></sub>
+</p>
+
 <table>
   <tr>
-    <td align="center"><strong>Administration</strong></td>
-    <td align="center"><strong>Share Patient Flow</strong></td>
-  </tr>
-  <tr>
-    <td><img src="docs/screenshots/adminstration_page.PNG" width="100%" alt="Administration" /></td>
-    <td><img src="docs/screenshots/share_patient_flow.PNG" width="100%" alt="Share Patient Flow" /></td>
-  </tr>
-  <tr>
-    <td colspan="2" align="center"><strong>Share Patient Flow (Step 2)</strong></td>
-  </tr>
-  <tr>
-    <td colspan="2"><img src="docs/screenshots/share_patient_flow_step2.PNG" width="100%" alt="Share Patient Flow Step 2" /></td>
+    <td align="center">
+      <img src="docs/screenshots/share_patient_flow.PNG" width="100%" alt="Share Patient Flow" /><br />
+      <sub><strong>Share Patient Flow</strong></sub>
+    </td>
+    <td align="center">
+      <img src="docs/screenshots/share_patient_flow_step2.PNG" width="100%" alt="Share Patient Flow Step 2" /><br />
+      <sub><strong>Share Patient Flow - Step 2</strong></sub>
+    </td>
   </tr>
 </table>
 

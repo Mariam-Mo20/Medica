@@ -23,38 +23,66 @@ Medica is a multi-tenant clinic management web application for doctors and assis
 
 ## Screenshots
 
-### Dashboard
-![Dashboard](docs/screenshots/dashboard_page.PNG)
+### Core Workflow
 
-### Patients
-![Patients](docs/screenshots/patients_page.PNG)
+<table>
+  <tr>
+    <td align="center"><strong>Dashboard</strong></td>
+    <td align="center"><strong>Patients</strong></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/dashboard_page.PNG" width="100%" alt="Dashboard" /></td>
+    <td><img src="docs/screenshots/patients_page.PNG" width="100%" alt="Patients" /></td>
+  </tr>
+  <tr>
+    <td align="center"><strong>Patient Details</strong></td>
+    <td align="center"><strong>Appointments</strong></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/patient_profile.PNG" width="100%" alt="Patient Details" /></td>
+    <td><img src="docs/screenshots/appointments_page.PNG" width="100%" alt="Appointments" /></td>
+  </tr>
+</table>
 
-### Patient Details
-![Patient Details](docs/screenshots/patient_profile.PNG)
+### Authentication and Onboarding
 
-### Appointments
-![Appointments](docs/screenshots/appointments_page.PNG)
+<table>
+  <tr>
+    <td align="center"><strong>Login</strong></td>
+    <td align="center"><strong>Signup</strong></td>
+    <td align="center"><strong>Select Role</strong></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/login_page.png" width="100%" alt="Login" /></td>
+    <td><img src="docs/screenshots/signup_page.png" width="100%" alt="Signup" /></td>
+    <td><img src="docs/screenshots/role_page.png" width="100%" alt="Select Role" /></td>
+  </tr>
+  <tr>
+    <td colspan="3" align="center"><strong>Create Clinic</strong></td>
+  </tr>
+  <tr>
+    <td colspan="3"><img src="docs/screenshots/create_clinic.png" width="100%" alt="Create Clinic" /></td>
+  </tr>
+</table>
 
-### Login
-![Login](docs/screenshots/login_page.png)
+### Collaboration and Administration
 
-### Administration
-![Administration](docs/screenshots/adminstration_page.PNG)
-
-### Share Patient Flow
-![Share Patient Flow](docs/screenshots/share_patient_flow.PNG)
-
-### Share Patient Flow (Step 2)
-![Share Patient Flow Step 2](docs/screenshots/share_patient_flow_step2.PNG)
-
-### Signup
-![Signup](docs/screenshots/signup_page.png)
-
-### Select Role
-![Select Role](docs/screenshots/role_page.png)
-
-### Create Clinic
-![Create Clinic](docs/screenshots/create_clinic.png)
+<table>
+  <tr>
+    <td align="center"><strong>Administration</strong></td>
+    <td align="center"><strong>Share Patient Flow</strong></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/adminstration_page.PNG" width="100%" alt="Administration" /></td>
+    <td><img src="docs/screenshots/share_patient_flow.PNG" width="100%" alt="Share Patient Flow" /></td>
+  </tr>
+  <tr>
+    <td colspan="2" align="center"><strong>Share Patient Flow (Step 2)</strong></td>
+  </tr>
+  <tr>
+    <td colspan="2"><img src="docs/screenshots/share_patient_flow_step2.PNG" width="100%" alt="Share Patient Flow Step 2" /></td>
+  </tr>
+</table>
 
 
 ## Local Setup

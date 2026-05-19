@@ -548,12 +548,17 @@ export function PatientDetailPage() {
                             <Eye className="h-3 w-3 mr-1" />
                             {expandedVisits[record.id] ? "Hide Visit" : "View Visit"}
                           </Button>
-                          {getRecordPrescriptions(record.id).length > 0 && (
-                            <Button type="button" variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={() => printPrescription(record)}>
-                              <Printer className="h-3 w-3 mr-1" />
-                              Print Prescription
-                            </Button>
-                          )}
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-7 px-2 text-xs"
+                            onClick={() => printPrescription(record)}
+                            disabled={getRecordPrescriptions(record.id).length === 0}
+                          >
+                            <Printer className="h-3 w-3 mr-1" />
+                            Print Prescription
+                          </Button>
                         </div>
                       </div>
                       <h4 className="text-base font-bold text-foreground mb-2">

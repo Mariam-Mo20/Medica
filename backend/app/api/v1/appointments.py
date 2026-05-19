@@ -10,7 +10,7 @@ from app.models.appointment import Appointment
 from app.models.doctor import Doctor
 from app.models.patient import Patient
 from app.schemas.appointment import AppointmentCreate, AppointmentUpdate, AppointmentResponse, AppointmentStatusUpdate
-from app.services.appointment_service import check_conflict, generate_series_instances
+from app.services.appointment_service import check_conflict, generate_series_instances, has_duplicate_patient_slot
 
 router = APIRouter()
 
@@ -86,6 +86,15 @@ async def create_appointment(
     current_user: User = Depends(require_role("doctor", "assistant")),
     tenant: Tenant = Depends(get_current_tenant),
 ):
+    duplicate_slot = await has_duplicate_patient_slot(
+        db=db,
+        tenant_id=tenant.id,
+        patient_id=data.patient_id,
+        scheduled_at=data.scheduled_at,
+    )
+    if duplicate_slot:
+        raise HTTPException(status_code=409, detail="Duplicate appointment for this patient at the same time")
+
     if data.doctor_id:
         has_conflict = await check_conflict(db, data.doctor_id, data.scheduled_at, data.duration_minutes)
         if has_conflict:
@@ -165,7 +174,7 @@ async def list_appointments(
         from datetime import datetime
         query = query.where(Appointment.scheduled_at <= datetime.fromisoformat(date_to))
 
-    query = query.order_by(Appointment.scheduled_at.desc()).offset(skip).limit(limit)
+    query = query.order_by(Appointment.scheduled_at.asc()).offset(skip).limit(limit)
     result = await db.execute(query)
     rows = result.all()
 
@@ -219,6 +228,17 @@ async def update_appointment(
         doc_id = data.doctor_id or appointment.doctor_id
         sched = data.scheduled_at or appointment.scheduled_at
         dur = data.duration_minutes or appointment.duration_minutes
+
+        duplicate_slot = await has_duplicate_patient_slot(
+            db=db,
+            tenant_id=tenant.id,
+            patient_id=appointment.patient_id,
+            scheduled_at=sched,
+            exclude_id=appointment_id,
+        )
+        if duplicate_slot:
+            raise HTTPException(status_code=409, detail="Duplicate appointment for this patient at the same time")
+
         has_conflict = await check_conflict(db, doc_id, sched, dur, exclude_id=appointment_id)
         if has_conflict:
             raise HTTPException(status_code=409, detail="Time slot conflicts with an existing appointment")

@@ -21,7 +21,7 @@ Medica helps clinics run daily operations in one system: onboarding teams, regis
 
 ## Demo
 
-- Live Frontend Demo: `<add-url-here>`
+- Live Frontend Demo: `https://frontend-neon-eta-yhbfdcoe8c.vercel.app/`
 - Backend Health Check: `https://medica-be45.onrender.com/health`
 - Demo Account: `<optional>`
 

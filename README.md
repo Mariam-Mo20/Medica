@@ -19,6 +19,25 @@ Medica helps clinics run daily operations in one system: onboarding teams, regis
   <img src="docs/screenshots/dashboard_page.PNG" alt="Medica Dashboard" width="92%" />
 </p>
 
+## Demo
+
+- Live Frontend Demo: `<add-url-here>`
+- Backend Health Check: `https://medica-be45.onrender.com/health`
+- Demo Account: `<optional>`
+
+## Documentation
+
+- `docs/architecture.md`
+- `docs/api.md`
+- `docs/deployment.md`
+- `docs/security.md`
+
+## Repository Notes
+
+- This is a portfolio/freelance showcase project.
+- Real secrets are not committed.
+- Environment variables are managed outside source control.
+
 ## Features
 
 - Multi-tenant clinic onboarding (doctor creates clinic) and invitation-based assistant signup.

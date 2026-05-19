@@ -2,7 +2,24 @@
 
 Medica is a multi-tenant clinic management web application for doctors and assistants, with patient records, appointments, prescriptions, invitations, and operational dashboards.
 
-## Main Features
+![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-4169E1?logo=postgresql&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-UI-06B6D4?logo=tailwindcss&logoColor=white)
+![Render](https://img.shields.io/badge/Render-Backend-46E3B7?logo=render&logoColor=111111)
+![Vercel](https://img.shields.io/badge/Vercel-Frontend-000000?logo=vercel&logoColor=white)
+![Flutter Planned](https://img.shields.io/badge/Flutter-Planned-02569B?logo=flutter&logoColor=white)
+
+## Overview
+
+Medica helps clinics run daily operations in one system: onboarding teams, registering patients, scheduling visits, recording consultations, and sharing patient context between doctors.
+
+<p align="center">
+  <img src="docs/screenshots/dashboard_page.PNG" alt="Medica Dashboard" width="92%" />
+</p>
+
+## Features
 
 - Multi-tenant clinic onboarding (doctor creates clinic) and invitation-based assistant signup.
 - JWT authentication with access and refresh tokens.
@@ -23,28 +40,7 @@ Medica is a multi-tenant clinic management web application for doctors and assis
 
 ## Screenshots
 
-### Core Workflow
-
-<table>
-  <tr>
-    <td align="center"><strong>Dashboard</strong></td>
-    <td align="center"><strong>Patients</strong></td>
-  </tr>
-  <tr>
-    <td><img src="docs/screenshots/dashboard_page.PNG" width="100%" alt="Dashboard" /></td>
-    <td><img src="docs/screenshots/patients_page.PNG" width="100%" alt="Patients" /></td>
-  </tr>
-  <tr>
-    <td align="center"><strong>Patient Details</strong></td>
-    <td align="center"><strong>Appointments</strong></td>
-  </tr>
-  <tr>
-    <td><img src="docs/screenshots/patient_profile.PNG" width="100%" alt="Patient Details" /></td>
-    <td><img src="docs/screenshots/appointments_page.PNG" width="100%" alt="Appointments" /></td>
-  </tr>
-</table>
-
-### Authentication and Onboarding
+### Authentication
 
 <table>
   <tr>
@@ -62,6 +58,43 @@ Medica is a multi-tenant clinic management web application for doctors and assis
   </tr>
   <tr>
     <td colspan="3"><img src="docs/screenshots/create_clinic.png" width="100%" alt="Create Clinic" /></td>
+  </tr>
+</table>
+
+### Dashboard and Analytics
+
+<table>
+  <tr>
+    <td><img src="docs/screenshots/dashboard_page.PNG" width="100%" alt="Dashboard" /></td>
+  </tr>
+</table>
+
+### Patients Management
+
+<table>
+  <tr>
+    <td align="center"><strong>Patients List</strong></td>
+    <td align="center"><strong>Patient Profile</strong></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/patients_page.PNG" width="100%" alt="Patients List" /></td>
+    <td><img src="docs/screenshots/patient_profile.PNG" width="100%" alt="Patient Profile" /></td>
+  </tr>
+</table>
+
+### Appointments
+
+<table>
+  <tr>
+    <td><img src="docs/screenshots/appointments_page.PNG" width="100%" alt="Appointments" /></td>
+  </tr>
+</table>
+
+### Consultations and Prescriptions
+
+<table>
+  <tr>
+    <td><img src="docs/screenshots/patient_profile.PNG" width="100%" alt="Consultation and Prescription in Patient Profile" /></td>
   </tr>
 </table>
 
@@ -83,6 +116,32 @@ Medica is a multi-tenant clinic management web application for doctors and assis
     <td colspan="2"><img src="docs/screenshots/share_patient_flow_step2.PNG" width="100%" alt="Share Patient Flow Step 2" /></td>
   </tr>
 </table>
+
+## Architecture Overview
+
+- **Frontend (React + TypeScript):** Single-page app for authentication, dashboard, patient lifecycle, and appointments.
+- **Backend (FastAPI):** REST API under `/api/v1` with role checks and tenant-scoped access.
+- **Database (PostgreSQL/SQLite):** SQLAlchemy models for tenants, users, patients, appointments, records, prescriptions, invitations, and notifications.
+- **Authentication:** JWT access and refresh token flow.
+- **Multi-tenant model:** each user belongs to a tenant, and domain queries are scoped by tenant context.
+
+## Security Highlights
+
+- JWT access/refresh token flow with role checks on protected routes.
+- Tenant-scoped data access in API handlers.
+- Rate limiting on sensitive endpoints (`register`, `login`, `refresh`, invitation checks).
+- Global exception responses avoid leaking internal error details.
+- Sensitive values are env-driven; `.env` files are git-ignored.
+
+See `docs/security.md` for full details and Phase 2 recommendations.
+
+## Deployment
+
+- **Frontend:** Vercel
+- **Backend:** Render
+- **Configuration:** environment variables are managed outside source control (`backend/.env` locally, platform env settings in deployed environments).
+- **API routing:** frontend rewrites `/api/*` to backend host (`frontend/vercel.json`).
+- **Hardening status:** Phase 1 controls include rate limiting, tenant endpoint protection, and sanitized global error responses.
 
 
 ## Local Setup
@@ -163,19 +222,10 @@ cd frontend
 npx tsc --noEmit
 ```
 
-## Deployment Overview
+## Future Improvements
 
-- Backend is deployed to Render.
-- Frontend is deployed to Vercel.
-- Frontend rewrites `/api/*` to the Render backend host (`frontend/vercel.json`).
-- See `docs/deployment.md` for setup, env vars, redeploy, and verification steps.
-
-## Security Summary
-
-- JWT access/refresh token flow with role checks on protected routes.
-- Tenant-scoped data access in API handlers.
-- Rate limiting on sensitive endpoints (`register`, `login`, `refresh`, invitation checks).
-- Global exception responses avoid leaking internal error details.
-- Sensitive values are env-driven; `.env` files are git-ignored.
-
-See `docs/security.md` for full details and Phase 2 recommendations.
+- Move auth tokens from `localStorage` to HttpOnly cookies.
+- Add refresh-token revocation and session tracking.
+- Add secure logout and CSRF protections for cookie-based auth.
+- Expand auth integration tests for login/refresh/logout/session scenarios.
+- Evaluate distributed rate limiting for horizontally scaled deployments.

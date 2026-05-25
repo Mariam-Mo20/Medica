@@ -12,12 +12,12 @@ class AppSectionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (title != null) ...[
-              Text(title!, style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+              Text(title!, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: AppColors.textPrimary)),
               const SizedBox(height: AppSpacing.sm),
             ],
             child,

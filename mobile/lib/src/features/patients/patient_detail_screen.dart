@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../app/design_tokens.dart';
 import '../auth/auth_controller.dart';
 import '../shared/widgets/app_cards.dart';
 import '../shared/widgets/app_scaffold_template.dart';
@@ -67,21 +68,37 @@ class _PatientDetailScreenState extends ConsumerState<PatientDetailScreen> {
         IconButton(onPressed: () => context.go('/patients/${patient!.id}/edit'), icon: const Icon(Icons.edit_outlined), tooltip: 'Edit patient'),
       ],
       body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AppSectionCard(
-            title: 'Profile',
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF3F7FC),
+              borderRadius: BorderRadius.circular(AppRadius.lg),
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('MRN: ${patient!.medicalRecordNumber ?? '-'}'),
-                Text('DOB: ${patient!.dateOfBirth}'),
-                Text('Phone: ${patient!.phone ?? '-'}'),
-                Text('Email: ${patient!.email ?? '-'}'),
-                Text('Address: ${patient!.address ?? '-'}'),
+                Text(patient!.fullName, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+                const SizedBox(height: AppSpacing.xs),
+                Text('MRN ${patient!.medicalRecordNumber ?? '-'}', style: const TextStyle(color: AppColors.textMuted)),
               ],
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
+          AppSectionCard(
+            title: 'Profile',
+            child: Column(
+              children: [
+                _kv('Date of Birth', patient!.dateOfBirth),
+                _kv('Phone', patient!.phone ?? '-'),
+                _kv('Email', patient!.email ?? '-'),
+                _kv('Address', patient!.address ?? '-'),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
           AppSectionCard(
             title: 'Visits',
             child: records.isEmpty
@@ -94,14 +111,14 @@ class _PatientDetailScreenState extends ConsumerState<PatientDetailScreen> {
                           child: Card(
                             margin: EdgeInsets.zero,
                             child: Padding(
-                              padding: const EdgeInsets.all(12),
+                              padding: const EdgeInsets.all(AppSpacing.md),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(r.diagnosis ?? 'Medical Visit', style: const TextStyle(fontWeight: FontWeight.w700)),
+                                  Text(r.diagnosis ?? 'Medical Visit', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
                                   const SizedBox(height: 4),
                                   Text(_fmt(r.createdAt), style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
-                                  const SizedBox(height: 6),
+                                  const SizedBox(height: AppSpacing.sm),
                                   Text(r.symptoms ?? '-'),
                                   const SizedBox(height: 4),
                                   Text(r.visitNotes ?? '-'),
@@ -113,6 +130,22 @@ class _PatientDetailScreenState extends ConsumerState<PatientDetailScreen> {
                     ],
                   ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _kv(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 100,
+            child: Text(label, style: const TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.w700)),
+          ),
+          Expanded(child: Text(value, style: const TextStyle(fontWeight: FontWeight.w600))),
         ],
       ),
     );

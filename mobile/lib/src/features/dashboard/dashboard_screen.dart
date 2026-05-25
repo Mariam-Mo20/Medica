@@ -59,47 +59,56 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       title: 'Dashboard',
       subtitle: 'Today clinic overview',
       body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          for (final c in cards)
-            Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-              child: AppSectionCard(
-                child: Row(
+          const Text('Today at a glance', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17)),
+          const SizedBox(height: AppSpacing.sm),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: cards.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: AppSpacing.sm,
+              crossAxisSpacing: AppSpacing.sm,
+              childAspectRatio: 1.35,
+            ),
+            itemBuilder: (context, index) {
+              final c = cards[index];
+              return Container(
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(AppRadius.lg),
+                  border: Border.all(color: AppColors.border),
+                ),
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFE8F0FE),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(c.$3, color: AppColors.primary, size: 18),
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(color: const Color(0xFFE8F0FE), borderRadius: BorderRadius.circular(10)),
+                      child: Icon(c.$3, color: AppColors.primary, size: 16),
                     ),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(c.$1, style: const TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.w600)),
-                          const SizedBox(height: 4),
-                          Text(c.$2, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
-                        ],
-                      ),
-                    ),
+                    Text(c.$2, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+                    Text(c.$1, style: const TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.w600)),
                   ],
                 ),
-              ),
-            ),
-          const SizedBox(height: AppSpacing.sm),
+              );
+            },
+          ),
+          const SizedBox(height: AppSpacing.lg),
           AppSectionCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Quick actions', style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+                const Text('Quick actions', style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.textPrimary, fontSize: 17)),
                 const SizedBox(height: AppSpacing.sm),
                 Row(
                   children: [
                     Expanded(
-                      child: OutlinedButton.icon(
+                      child: FilledButton.tonalIcon(
                         onPressed: () => context.go('/patients/new'),
                         icon: const Icon(Icons.person_add_alt_1),
                         label: const Text('New Patient'),
@@ -107,10 +116,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     ),
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
-                      child: OutlinedButton.icon(
+                      child: FilledButton.tonalIcon(
                         onPressed: () => context.go('/appointments'),
                         icon: const Icon(Icons.calendar_month_outlined),
-                        label: const Text('Appointments'),
+                        label: const Text('New Visit'),
                       ),
                     ),
                   ],
@@ -118,17 +127,27 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               ],
             ),
           ),
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: AppSpacing.md),
           AppSectionCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Today focus', style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
-                const SizedBox(height: 6),
+                const Text('Today focus', style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.textPrimary, fontSize: 17)),
+                const SizedBox(height: AppSpacing.xs),
                 Text(
                   'Review ${data!['today_appointments'] ?? 0} appointments and follow up with recent patient visits.',
                   style: const TextStyle(color: AppColors.textMuted, height: 1.35),
                 ),
+                const SizedBox(height: AppSpacing.md),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF3F7FC),
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                  ),
+                  child: const Text('Tip: Tap Patients to review records quickly before each visit.', style: TextStyle(fontWeight: FontWeight.w600)),
+                )
               ],
             ),
           ),

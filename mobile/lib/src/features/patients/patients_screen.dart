@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import '../../app/design_tokens.dart';
 import '../auth/auth_controller.dart';
 import '../shared/widgets/app_buttons.dart';
-import '../shared/widgets/app_cards.dart';
 import '../shared/widgets/app_scaffold_template.dart';
 import '../shared/widgets/async_states.dart';
 import 'patient_models.dart';
@@ -65,13 +64,32 @@ class _PatientsScreenState extends ConsumerState<PatientsScreen> {
         ),
       ],
       body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          TextField(
-            controller: searchCtrl,
-            decoration: const InputDecoration(labelText: 'Search by name or phone'),
-            onChanged: (_) => _fetchPatients(),
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(AppRadius.lg),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Patient directory', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+                const SizedBox(height: AppSpacing.xs),
+                TextField(
+                  controller: searchCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Search by name or phone',
+                    prefixIcon: Icon(Icons.search),
+                  ),
+                  onChanged: (_) => _fetchPatients(),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.lg),
           if (loading)
             const LoadingState()
           else if (error != null)
@@ -84,16 +102,24 @@ class _PatientsScreenState extends ConsumerState<PatientsScreen> {
                 for (final p in patients)
                   Padding(
                     padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                    child: AppSectionCard(
-                      child: InkWell(
-                        onTap: () => context.go('/patients/${p.id}'),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(AppRadius.lg),
+                      onTap: () => context.go('/patients/${p.id}'),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(AppRadius.lg),
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        padding: const EdgeInsets.all(AppSpacing.md),
                         child: Row(
                           children: [
                             CircleAvatar(
+                              radius: 22,
                               backgroundColor: const Color(0xFFE8F0FE),
                               child: Text(
                                 (p.firstName.isNotEmpty ? p.firstName[0] : 'P').toUpperCase(),
-                                style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700),
+                                style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w800),
                               ),
                             ),
                             const SizedBox(width: AppSpacing.md),
@@ -101,8 +127,8 @@ class _PatientsScreenState extends ConsumerState<PatientsScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(p.fullName, style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-                                  const SizedBox(height: 2),
+                                  Text(p.fullName, style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.textPrimary, fontSize: 16)),
+                                  const SizedBox(height: 4),
                                   Text('MRN: ${p.medicalRecordNumber ?? '-'}', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
                                 ],
                               ),
@@ -115,7 +141,7 @@ class _PatientsScreenState extends ConsumerState<PatientsScreen> {
                   )
               ],
             ),
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: AppSpacing.md),
           AppPrimaryButton(
             onPressed: () => context.go('/patients/new'),
             child: const Text('Add New Patient'),

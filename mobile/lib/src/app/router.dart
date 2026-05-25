@@ -2,9 +2,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/auth/auth_controller.dart';
+import '../features/auth/signup_clinic_screen.dart';
 import '../features/auth/login_screen.dart';
+import '../features/auth/signup_role_screen.dart';
 import '../features/auth/signup_screen.dart';
 import '../features/dashboard/dashboard_screen.dart';
+import '../features/more/more_screen.dart';
 import '../features/patients/patient_detail_screen.dart';
 import '../features/patients/patient_form_screen.dart';
 import '../features/patients/patients_screen.dart';
@@ -17,7 +20,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/login',
     redirect: (context, state) {
-      final isAuthRoute = state.matchedLocation == '/login' || state.matchedLocation == '/signup';
+      final isAuthRoute = state.matchedLocation == '/login' ||
+          state.matchedLocation == '/signup' ||
+          state.matchedLocation == '/signup/role' ||
+          state.matchedLocation == '/signup/clinic';
       if (!auth.authenticated && !isAuthRoute) return '/login';
       if (auth.authenticated && isAuthRoute) return '/dashboard';
       return null;
@@ -25,6 +31,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
       GoRoute(path: '/signup', builder: (_, __) => const SignupScreen()),
+      GoRoute(path: '/signup/role', builder: (_, __) => const SignupRoleScreen()),
+      GoRoute(path: '/signup/clinic', builder: (_, __) => const SignupClinicScreen()),
       ShellRoute(
         builder: (_, __, child) => AppShell(child: child),
         routes: [
@@ -35,7 +43,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/patients/:id', builder: (_, s) => PatientDetailScreen(patientId: int.parse(s.pathParameters['id']!))),
           GoRoute(path: '/appointments', builder: (_, __) => const PlaceholderScreen(title: 'Appointments', subtitle: 'Schedule and update status')),
           GoRoute(path: '/notifications', builder: (_, __) => const PlaceholderScreen(title: 'Notifications', subtitle: 'Inbox and unread updates')),
-          GoRoute(path: '/more', builder: (_, __) => const PlaceholderScreen(title: 'More', subtitle: 'Settings and role-specific tools')),
+          GoRoute(path: '/more', builder: (_, __) => const MoreScreen()),
         ],
       ),
     ],

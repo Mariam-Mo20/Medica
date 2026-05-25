@@ -109,51 +109,64 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
 
     return AppScaffoldTemplate(
       title: isEdit ? 'Edit Patient' : 'Add Patient',
-      subtitle: 'Single-column mobile form',
+      subtitle: isEdit ? 'Update patient profile' : 'Create a new patient record',
       body: Form(
         key: _form,
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            AppTextField(
-              controller: fullName,
-              label: 'Full Name',
-              validator: (v) {
-                final parts = (v ?? '').trim().split(RegExp(r'\s+')).where((s) => s.isNotEmpty).toList();
-                if (parts.length < 2) return 'Enter first and last name';
-                return null;
-              },
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(AppRadius.lg),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Column(
+                children: [
+                  AppTextField(
+                    controller: fullName,
+                    label: 'Full Name',
+                    validator: (v) {
+                      final parts = (v ?? '').trim().split(RegExp(r'\s+')).where((s) => s.isNotEmpty).toList();
+                      if (parts.length < 2) return 'Enter first and last name';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  AppTextField(
+                    controller: dob,
+                    label: 'Date of Birth',
+                    hintText: 'DD-MM-YYYY',
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [DateInputFormatter()],
+                    maxLength: 10,
+                    validator: (v) {
+                      final value = (v ?? '').trim();
+                      if (value.isEmpty) return 'Date of birth is required';
+                      if (!RegExp(r'^\d{2}-\d{2}-\d{4}$').hasMatch(value)) {
+                        return 'Use DD-MM-YYYY';
+                      }
+                      if (!_isValidDisplayDate(value)) return 'Enter a valid date';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  AppTextField(controller: gender, label: 'Gender'),
+                  const SizedBox(height: AppSpacing.md),
+                  AppTextField(controller: phone, label: 'Phone'),
+                  const SizedBox(height: AppSpacing.md),
+                  AppTextField(controller: email, label: 'Email'),
+                  const SizedBox(height: AppSpacing.md),
+                  AppTextField(controller: address, label: 'Address', maxLines: 2),
+                ],
+              ),
             ),
-            const SizedBox(height: AppSpacing.md),
-            AppTextField(
-              controller: dob,
-              label: 'Date of Birth',
-              hintText: 'DD-MM-YYYY',
-              keyboardType: TextInputType.number,
-              inputFormatters: [DateInputFormatter()],
-              maxLength: 10,
-              validator: (v) {
-                final value = (v ?? '').trim();
-                if (value.isEmpty) return 'Date of birth is required';
-                if (!RegExp(r'^\d{2}-\d{2}-\d{4}\$').hasMatch(value)) {
-                  return 'Use DD-MM-YYYY';
-                }
-                if (!_isValidDisplayDate(value)) return 'Enter a valid date';
-                return null;
-              },
-            ),
-            const SizedBox(height: AppSpacing.md),
-            AppTextField(controller: gender, label: 'Gender'),
-            const SizedBox(height: AppSpacing.md),
-            AppTextField(controller: phone, label: 'Phone'),
-            const SizedBox(height: AppSpacing.md),
-            AppTextField(controller: email, label: 'Email'),
-            const SizedBox(height: AppSpacing.md),
-            AppTextField(controller: address, label: 'Address', maxLines: 2),
             if (error != null) ...[
               const SizedBox(height: AppSpacing.sm),
               Text(error!, style: const TextStyle(color: AppColors.danger)),
             ],
-            const SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppSpacing.lg),
             AppPrimaryButton(
               onPressed: loading ? null : _submit,
               child: loading ? const CircularProgressIndicator() : Text(isEdit ? 'Save Changes' : 'Create Patient'),
